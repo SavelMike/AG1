@@ -31,10 +31,14 @@ struct intlist
 	struct intlist* next;
 };
 
+#define STATELESS 0
+#define INFECTED 1
+#define HASVACCINE 2
+
 struct graphvertex
 {
 	int id; // identifier
-	int status; // infected or has vaccine
+	int status; // infected or has vaccine or stateless
 	struct intlist* adjactedverteces; // neighboor verteces
 };
 
@@ -64,16 +68,42 @@ void print_intlist(struct intlist* head)
 	}
 }
 
+void free_intlist(struct intlist* head)
+{
+	while (head != NULL) {
+		struct intlist* temp;
+		temp = head->next;
+		free(head);
+		head = temp;
+	}
+}
+
+char* statenames[] =
+{
+	[STATELESS] = "stateless",[INFECTED] = "infected",
+	[HASVACCINE] = "has vaccine"
+};
+
 void print_graph(struct graphvertex* graph, int nvertex)
 {
 	int i;
 	
 	for (i = 0; i < nvertex; i++) {
-		printf("id = %d status = %d adjacent vertices: ", graph[i].id, 
-				graph[i].status);
+		printf("id = %d status = %s adjacent vertices: ", graph[i].id, 
+				statenames[graph[i].status]);
 		print_intlist(graph[i].adjactedverteces);
 		printf("\n");
 	}
+}
+
+void free_graph(struct graphvertex* graph, int nvertex)
+{
+	int i;
+
+	for (i = 0; i < nvertex; i++) {
+		free_intlist(graph[i].adjactedverteces);
+	}
+	free(graph);
 }
 
 int main(void)
@@ -113,8 +143,17 @@ int main(void)
 	// Initilize all fields of the array
 	for (i = 0; i < nplanets; i++) {
 		graph[i].id = i;
-		graph[i].status = 0;
+		graph[i].status = STATELESS;
 		graph[i].adjactedverteces = NULL;
+	}
+
+	// Set status of vertex
+	for (i = 0; i < numofinfectedplanets; i++) {
+		graph[infplanetid[i]].status = INFECTED;
+	}
+
+	for (i = 0; i < planetswithvaccine; i++) {
+		graph[planetswithvaccineids[i]].status = HASVACCINE;
 	}
 
 	// Read edges inf
