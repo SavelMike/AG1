@@ -129,10 +129,17 @@ void delete_intlist_last(struct intlist_head* list, struct intlist* old_last)
 
 void print_intlist(struct intlist* head)
 {
+	int n = 0;
+	
 	while (head != NULL) {
-		printf("%d ", head->value);
+		if (n > 0) {
+			printf(" ");
+		}
+		printf("%d", head->value);
 		head = head->next;
+		n++;
 	}
+	printf("\n");
 }
 
 void free_intlist(struct intlist* head)
@@ -243,11 +250,13 @@ void DFS_planet_walk(int curvertex, struct graphvertex* graph, int nvertex, int 
 	if (curvertex == terminal) {
 		if (planet_walk_safe(path, graph)) {
 			print_intlist(path->head);
+			free_intlist(path->head);
+			free_graph(graph, nvertex);
 			exit(0);
 		}
-		printf("Found planet %d\n", terminal);
-		print_intlist(path->head);
-		printf("\n");
+//		printf("Found planet %d\n", terminal);
+//		print_intlist(path->head);
+//	    printf("\n");
 		// Remove last element
 		delete_intlist_last(path, old_last);
 		return;
@@ -285,12 +294,6 @@ int main(void)
 	// and stops after getting infected
 	scanf("%d %d %d", &start, &terminal, &infectstops);
 	
-	// Read amount of infected planets and their ids
-	infplanetid = readintarray(&numofinfectedplanets);
-
-	// Read amount of planets with vaccine and their ids
-	planetswithvaccineids = readintarray(&planetswithvaccine);
-
 	// Constuct a graph in adjustency vertices form
 	graph = malloc(sizeof(struct graphvertex) * nplanets);
 	if (graph == NULL) {
@@ -305,9 +308,15 @@ int main(void)
 		graph[i].adjacency_list.head = NULL;
 		graph[i].adjacency_list.tail = NULL;
 		graph[i].bfs_mark = BFSUNMARKED;
-//		graph[i].bfs_distance = BFSDUNDEF;
-//		graph[i].bfs_pred = BFSPUNDEF;
+		//		graph[i].bfs_distance = BFSDUNDEF;
+		//		graph[i].bfs_pred = BFSPUNDEF;
 	}
+	
+	// Read amount of infected planets and their ids
+	infplanetid = readintarray(&numofinfectedplanets);
+
+	// Read amount of planets with vaccine and their ids
+	planetswithvaccineids = readintarray(&planetswithvaccine);
 
 	// Set status of vertex
 	for (i = 0; i < numofinfectedplanets; i++) {
@@ -318,6 +327,9 @@ int main(void)
 		graph[planetswithvaccineids[i]].status = HASVACCINE;
 	}
 
+	free(infplanetid);
+	free(planetswithvaccineids);
+
 	// Read edges
 	for (i = 0; i < mpaths; i++) {
 		int v1;
@@ -327,17 +339,14 @@ int main(void)
 		add_intlist_first(v2, &graph[v1].adjacency_list);
 	}
 
-	printf("num of planets = %d, num of paths = %d, init planet = %d, " 
-		   "term planet = %d, infected stops = %d\n", nplanets, mpaths, 
-		    start, terminal, infectstops);
+//	printf("num of planets = %d, num of paths = %d, init planet = %d, " 
+//		   "term planet = %d, infected stops = %d\n", nplanets, mpaths, 
+//		    start, terminal, infectstops);
 
 	DFS_planet_walk(start, graph, nplanets, terminal, &path);
 	printf("-1"); // No safe planet walk
 
-//	print_graph(graph, nplanets);
-
-	free(infplanetid);
-	free(planetswithvaccineids);
+	free_graph(graph, nplanets);
 	
 	return 0;
 }
