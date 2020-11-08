@@ -49,9 +49,9 @@ struct graphvertex
 {
 	int id; // identifier
 	int status; // infected or has vaccine or stateless
-	int bfs_distance; // required by BFS algorithm D(v)
 	int bfs_mark; // required by BFS algorithm
-	int bfs_pred; // Number of predecessor required by BFS algorithm P(v)
+//	int bfs_distance; // required by BFS algorithm D(v)
+//	int bfs_pred; // List of predecessors required by BFS algorithm P(v)
 	struct intlist_head adjacency_list; // neighboor verteces
 };
 
@@ -87,7 +87,7 @@ void add_intlist_last(int value, struct intlist_head* head)
 	newelement->value = value;
 	newelement->next = NULL;
 	if (head->tail != NULL) {
-		head->tail->next = newelement->next;
+		head->tail->next = newelement;
 	}
 	else {
 		head->head = newelement;
@@ -115,6 +115,18 @@ int delete_intlist_first(struct intlist_head* head)
 	return rc;
 }
 
+void delete_intlist_last(struct intlist_head* list, struct intlist* old_last)
+{
+	free(list->tail);
+	list->tail = old_last;
+	if (old_last == NULL) {
+		list->head = NULL;
+	}
+	else {
+		list->tail->next = NULL;
+	}
+}
+
 void print_intlist(struct intlist* head)
 {
 	while (head != NULL) {
@@ -140,21 +152,31 @@ int is_empty_intlist(const struct intlist_head* head)
 
 char* statenames[] =
 {
-	[STATELESS] = "stateless",[INFECTED] = "infected",
+	[STATELESS] = "stateless",
+	[INFECTED] = "infected",
 	[HASVACCINE] = "has vaccine"
 };
 
+char* marknames[] =
+{
+	[BFSUNMARKED] = "unmarked", 
+	[BFSOPENED] = "opened",
+	[BFSCLOSED] = "closed"
+};
+
+#if 0
 void print_graph(struct graphvertex* graph, int nvertex)
 {
 	int i;
 	
 	for (i = 0; i < nvertex; i++) {
-		printf("id = %d status = %s pred = %d distance = %d adjacent vertices: ", graph[i].id, 
-				statenames[graph[i].status], graph[i].bfs_pred, graph[i].bfs_distance);
+		printf("id = %d status = %s pred = %d distance = %d mark = %s adjacent vertices: ", graph[i].id, 
+				statenames[graph[i].status], graph[i].bfs_pred, graph[i].bfs_distance, marknames[graph[i].bfs_mark]);
 		print_intlist(graph[i].adjacency_list.head);
 		printf("\n");
 	}
 }
+#endif
 
 void free_graph(struct graphvertex* graph, int nvertex)
 {
@@ -166,46 +188,80 @@ void free_graph(struct graphvertex* graph, int nvertex)
 	free(graph);
 }
 
+#if 0
 void print_path(struct graphvertex* graph, int vertex)
 {
-	if (graph[vertex].bfs_pred = BFSPUNDEF) {
+	if (graph[vertex].bfs_pred == BFSPUNDEF) {
 		printf("%d ", vertex);
 		return;
 	}
 	print_path(graph, graph[vertex].bfs_pred);
 	printf("%d ", vertex);
 }
+#endif
 
-void BFS_planet_walk(struct graphvertex* graph, int nvertex, int start, int terminal)
+int infectstops; // Stops after crew was infected
+
+int planet_walk_safe(struct intlist_head* path, struct graphvertex* graph)
 {
-	struct intlist_head Q; // Serves as queue for BFS
+	struct intlist* cur;
+	int is_infected = 0;
+	int jumps_left = -1;
 	
-	Q.head = NULL;
-	Q.tail = NULL;
-	add_intlist_first(start, &Q);
-	graph[start].bfs_mark = BFSOPENED;
-	graph[start].bfs_distance = 0;
-	
-	while (!is_empty_intlist(&Q)) {
-		int v;
-		struct intlist* w;
-		v = delete_intlist_first(&Q);
-		for (w = graph[v].adjacency_list.head; w != NULL; w = w->next) {
-			if (graph[w->value].bfs_mark == BFSUNMARKED) {
-				graph[w->value].bfs_mark = BFSOPENED;
-				graph[w->value].bfs_distance = graph[v].bfs_distance + 1;
-				graph[w->value].bfs_pred = graph[v].id; // or just v
-				if (graph[w->value].id == terminal) {
-					// Reached the terminal planet
-					printf("*******************\n");
-					print_path(graph, terminal);
-					printf("\n");
-				}
-				add_intlist_last(graph[w->value].id, &Q);
+	cur = path->head;
+	while (cur != NULL) {
+		if (jumps_left != -1) {
+			jumps_left--;
+			if (jumps_left < 0) {
+				return 0;
 			}
 		}
-		graph[v].bfs_mark = BFSCLOSED;
+		if (!is_infected) {
+			if (graph[cur->value].status == INFECTED) {
+				jumps_left = infectstops;
+				is_infected = 1;
+			}
+			cur = cur->next;
+			continue;
+		}
+		// We are infected
+		if (graph[cur->value].status == HASVACCINE) {
+			is_infected = 0;
+			jumps_left = -1;
+		}
+		cur = cur->next;
 	}
+	return 1;
+}
+
+void DFS_planet_walk(int curvertex, struct graphvertex* graph, int nvertex, int terminal, struct intlist_head* path)
+{
+	struct intlist* w;
+	struct intlist* old_last = path->tail;
+	
+	add_intlist_last(curvertex, path);
+	if (curvertex == terminal) {
+		if (planet_walk_safe(path, graph)) {
+			print_intlist(path->head);
+			exit(0);
+		}
+		printf("Found planet %d\n", terminal);
+		print_intlist(path->head);
+		printf("\n");
+		// Remove last element
+		delete_intlist_last(path, old_last);
+		return;
+	}
+	if (graph[curvertex].bfs_mark == BFSOPENED) {
+		delete_intlist_last(path, old_last);		
+		return;
+	}
+	graph[curvertex].bfs_mark = BFSOPENED;
+	for (w = graph[curvertex].adjacency_list.head; w != NULL; w = w->next) {
+		DFS_planet_walk(w->value, graph, nvertex, terminal, path);
+	}
+	graph[curvertex].bfs_mark = BFSUNMARKED;
+	delete_intlist_last(path, old_last);
 }
 
 int main(void)
@@ -214,13 +270,13 @@ int main(void)
 	int mpaths; // Num of paths
 	int start; // Initial planet
 	int terminal; // Terminal planet
-	int infectstops; // Stops after crew was infected
 	int numofinfectedplanets; // Amount of infected planets 
 	int* infplanetid; // Array of inf planets ids
 	int i;
 	int planetswithvaccine; // Amount of planets with vaccine
 	int* planetswithvaccineids; // Array of planets with vaccine ids
 	struct graphvertex* graph; // Array of verteces or the graph itself
+	struct intlist_head path = { .head = NULL, .tail = NULL }; // Path for DFS 
 
     // Reads number of planes and number of paths
 	scanf("%d %d", &nplanets, &mpaths);
@@ -249,8 +305,8 @@ int main(void)
 		graph[i].adjacency_list.head = NULL;
 		graph[i].adjacency_list.tail = NULL;
 		graph[i].bfs_mark = BFSUNMARKED;
-		graph[i].bfs_distance = BFSDUNDEF;
-		graph[i].bfs_pred = BFSPUNDEF;
+//		graph[i].bfs_distance = BFSDUNDEF;
+//		graph[i].bfs_pred = BFSPUNDEF;
 	}
 
 	// Set status of vertex
@@ -262,7 +318,7 @@ int main(void)
 		graph[planetswithvaccineids[i]].status = HASVACCINE;
 	}
 
-	// Read edges inf
+	// Read edges
 	for (i = 0; i < mpaths; i++) {
 		int v1;
 		int v2;
@@ -275,9 +331,10 @@ int main(void)
 		   "term planet = %d, infected stops = %d\n", nplanets, mpaths, 
 		    start, terminal, infectstops);
 
-	BFS_planet_walk(graph, nplanets, start, terminal);
+	DFS_planet_walk(start, graph, nplanets, terminal, &path);
+	printf("-1"); // No safe planet walk
 
-	print_graph(graph, nplanets);
+//	print_graph(graph, nplanets);
 
 	free(infplanetid);
 	free(planetswithvaccineids);
