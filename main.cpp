@@ -179,14 +179,14 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
     serie_size = m_info.arr_size;
 
     while(1) {
-        intloaded = flib_read(in_file, m_info.arr1, serie_size);
+        intloaded = flib_read(in_file, m_info.arr1, serie_size / sizeof(int));
         if (intloaded == 0) {
             break;
         }
         qsort(m_info.arr1, (size_t)intloaded, sizeof(int), cmp);
         flib_write(f1, m_info.arr1, intloaded);
         
-        intloaded = flib_read(in_file, m_info.arr1, serie_size);
+        intloaded = flib_read(in_file, m_info.arr1, serie_size / sizeof(int));
         if (intloaded == 0) {
             break;
         }
