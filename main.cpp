@@ -9,29 +9,36 @@ struct m_info {
     int arr_size;
 };
 
+void print_array(const char* str, int* p, int64_t amnt)
+{
+    int i;
+    
+    printf("*******%s : %lld\n", str, amnt);
+    for (i = 0; i < amnt; i++) {
+        printf("%d ", p[i]);
+    }
+    printf("\n");
+}
+
 // Input parameters:
 //      in1
 //      in2
-//      serie_size
+//      serie_size (in bytes)
 //      struct merge_info*
 //      out
 // return value:
-//      2 if nothing was read from both files 
-//      (indicates that sorting is over)
-//      1 if nothing was merged
+//      1 if nothing was read from in2 and from in2
 //      0 otherwise
 int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
 {    
-    int index1 = m_info->arr_size;
-    int index2 = m_info->arr_size;
+    int index1 = 0;
+    int index2 = 0;
     int index_out = 0;
     int64_t rd1 = 0;
     int64_t rd2 = 0;
     int64_t total_rd1 = 0;
     int64_t total_rd2 = 0;
     int64_t to_read;
-    int64_t read1_zero;
-    int64_t read2_zero;
     int nf = serie_size / m_info->arr_size;
     int rem = serie_size % m_info->arr_size;
     int cnt1 = 0;
@@ -53,7 +60,6 @@ int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
             if (rd1 != to_read || to_read == 0) {
                 in1_over = 1;
             }
-            read1_zero = rd1;
             index1 = 0;
             total_rd1 += rd1 * sizeof(int);
             if (total_rd1 == serie_size) {
@@ -77,7 +83,6 @@ int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
             if (rd2 != to_read || to_read == 0) {
                 in2_over = 1;
             }
-            read2_zero = rd2;
             index2 = 0;
             total_rd2 += rd2 * sizeof(int);
             if (total_rd2 == serie_size) {
@@ -89,10 +94,14 @@ int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
             }
         }
         
+ //       print_array("arr1:", m_info->arr1 + index1, rd1);
+ //       print_array("arr2:", m_info->arr2 + index2, rd2);
+
+        
         // Sorting merge of m_info->arr1 and m_info->arr2 to m_info->out
         for ( ; (rd1 > 0 && rd2 > 0) || (rd1 == 0 && rd2 > 0 && in1_over) 
              || (rd2 == 0 && rd1 > 0 && in2_over); index_out++) {
-            if (index_out == (2 * m_info->arr_size)) {
+            if ((index_out * sizeof(int)) == (2 * m_info->arr_size)) {
                 flib_write(out, m_info->out, index_out);
                 index_out = 0;
             }
@@ -122,7 +131,9 @@ int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
                 rd1--;
             }
         }
+ //       print_array("arr out:", m_info->out, index_out);
     }
+
     flib_write(out, m_info->out, index_out);
     
     return (total_rd1 == 0 && total_rd2 == 0);
@@ -165,7 +176,7 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
     flib_open(f1, WRITE);
     flib_open(f2, WRITE);
 
-    serie_size = m_info.arr_size / sizeof(int);
+    serie_size = m_info.arr_size;
 
     while(1) {
         intloaded = flib_read(in_file, m_info.arr1, serie_size);
@@ -197,13 +208,13 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
         merges_nr = 0;
 
         while (1) {
-            rc = merge(f1, f2, serie_size * sizeof(int), &m_info, f3);
+            rc = merge(f1, f2, serie_size, &m_info, f3);
             if (rc == 0) {
                 merges_nr++;
             } else {
                 break;
             }
-            rc = merge(f1, f2, serie_size * sizeof(int), &m_info, f4);
+            rc = merge(f1, f2, serie_size, &m_info, f4);
             if (rc == 0) {
                 merges_nr++;
             } else {
@@ -306,11 +317,10 @@ int main(int argc, char **argv){
     flib_init_files(MAX_FILES);
     int INPUT = 0;
     int RESULT = 1;
-    int SIZE = 140;
-    SIZE = 40;
+    int SIZE = 187;
 
     create_random(INPUT, SIZE);
-    tarant_allegra(INPUT, RESULT, 64);
+    tarant_allegra(INPUT, RESULT, 73);
     check_result(RESULT, SIZE);
 
     flib_free_files();
