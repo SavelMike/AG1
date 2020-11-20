@@ -27,7 +27,7 @@ void print_array(const char* str, int* p, int64_t amnt)
 //      struct merge_info*
 //      out
 // return value:
-//      1 if nothing was read from in2 and from in2
+//      1 if nothing was read from in1 and from in2
 //      0 otherwise
 int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
 {    
@@ -47,10 +47,11 @@ int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
     int in2_over = 0;
 
     while (!in1_over || !in2_over) {
-        if (rd1 == 0) {
+        if (rd1 == 0 && !in1_over) {
             // Read next chunk of serie from file in1
             if (cnt1 == nf) {
                 to_read = rem / sizeof(int);
+                in1_over = 1;
             }
             else {
                 to_read = m_info->arr_size / sizeof(int);
@@ -70,9 +71,10 @@ int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
                 exit(1);
             }
         }
-        if (rd2 == 0) {
+        if (rd2 == 0 && !in2_over) {
             if (cnt2 == nf) {
                 to_read = rem / sizeof(int);
+                in2_over = 1;
             }
             else {
                 to_read = m_info->arr_size / sizeof(int);
@@ -177,6 +179,7 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
     flib_open(f2, WRITE);
 
     serie_size = m_info.arr_size;
+    serie_size += 5;
 
     while(1) {
         intloaded = flib_read(in_file, m_info.arr1, serie_size / sizeof(int));
@@ -247,6 +250,7 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
         serie_size *= 2;
     }
 
+    // Copy result to outfile
     flib_open(out_file, WRITE);
     flib_open(f3, READ);
 
@@ -317,10 +321,10 @@ int main(int argc, char **argv){
     flib_init_files(MAX_FILES);
     int INPUT = 0;
     int RESULT = 1;
-    int SIZE = 187;
+    int SIZE = 140;
 
     create_random(INPUT, SIZE);
-    tarant_allegra(INPUT, RESULT, 73);
+    tarant_allegra(INPUT, RESULT, 70);
     check_result(RESULT, SIZE);
 
     flib_free_files();
