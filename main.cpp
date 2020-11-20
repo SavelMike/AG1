@@ -101,7 +101,7 @@ int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
         // Sorting merge of m_info->arr1 and m_info->arr2 to m_info->out
         for ( ; (rd1 > 0 && rd2 > 0) || (rd1 == 0 && rd2 > 0 && in1_over) 
              || (rd2 == 0 && rd1 > 0 && in2_over); index_out++) {
-            if ((index_out * sizeof(int)) == (2 * m_info->arr_size)) {
+            if ((index_out * sizeof(int)) == (2U * m_info->arr_size)) {
                 flib_write(out, m_info->out, index_out);
                 index_out = 0;
             }
