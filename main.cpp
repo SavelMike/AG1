@@ -178,8 +178,9 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
     flib_open(f1, WRITE);
     flib_open(f2, WRITE);
 
+    // Serie must be multiple of size of int
     serie_size = m_info.arr_size;
-    serie_size += 5;
+    serie_size += 5 * sizeof(int);
 
     while(1) {
         intloaded = flib_read(in_file, m_info.arr1, serie_size / sizeof(int));
@@ -321,7 +322,7 @@ int main(int argc, char **argv){
     flib_init_files(MAX_FILES);
     int INPUT = 0;
     int RESULT = 1;
-    int SIZE = 140;
+    int SIZE = 43;
 
     create_random(INPUT, SIZE);
     tarant_allegra(INPUT, RESULT, 70);
