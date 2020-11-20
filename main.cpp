@@ -9,6 +9,7 @@ struct m_info {
     int arr_size;
 };
 
+#if 0
 void print_array(const char* str, int* p, int64_t amnt)
 {
     int i;
@@ -19,6 +20,7 @@ void print_array(const char* str, int* p, int64_t amnt)
     }
     printf("\n");
 }
+#endif
 
 // Input parameters:
 //      in1
@@ -96,10 +98,6 @@ int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
             }
         }
         
- //       print_array("arr1:", m_info->arr1 + index1, rd1);
- //       print_array("arr2:", m_info->arr2 + index2, rd2);
-
-        
         // Sorting merge of m_info->arr1 and m_info->arr2 to m_info->out
         for ( ; (rd1 > 0 && rd2 > 0) || (rd1 == 0 && rd2 > 0 && in1_over) 
              || (rd2 == 0 && rd1 > 0 && in2_over); index_out++) {
@@ -133,7 +131,6 @@ int merge(int in1, int in2, int serie_size, struct m_info* m_info, int out)
                 rd1--;
             }
         }
- //       print_array("arr out:", m_info->out, index_out);
     }
 
     flib_write(out, m_info->out, index_out);
@@ -152,6 +149,25 @@ int cmp(const void* a, const void* b)
     return (a1 == b1) ? 0 : 1;
 }
 
+void copy(int32_t in_file, int32_t out_file, struct m_info *m_info)
+{
+    int64_t intloaded;
+    
+    flib_open(out_file, WRITE);
+    flib_open(in_file, READ);
+
+    while (1) {
+        intloaded = flib_read(in_file, m_info->out, m_info->arr_size * 2 / sizeof(int));
+        if (intloaded == 0) {
+            break;
+        }
+        flib_write(out_file, m_info->out, intloaded);
+    }
+
+    flib_close(out_file);
+    flib_close(in_file);
+}
+
 void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
 
     struct m_info m_info;
@@ -163,15 +179,17 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
     uint16_t f4 = f3 + 1;
     int64_t intloaded;
     int tmp;
+    int* buff;
 
     m_info.arr_size = bytes / 4 / sizeof(int) * sizeof(int);
-    m_info.arr1 = (int*)malloc(m_info.arr_size);
-    m_info.arr2 = (int*)malloc(m_info.arr_size);
-    m_info.out = (int*)malloc(m_info.arr_size * 2);
-    if (m_info.arr1 == NULL || m_info.arr2 == NULL || m_info.out == NULL) {
+    buff = (int*)malloc(bytes / sizeof(int) * sizeof(int));
+    if (buff == NULL) {
         perror("Malloc failed");
         exit(1);
     }
+    m_info.arr1 = buff;
+    m_info.arr2 = buff + m_info.arr_size / sizeof(int);
+    m_info.out = m_info.arr2 + (m_info.arr_size / sizeof(int));
     
     // Initial split
     flib_open(in_file, READ);
@@ -179,28 +197,28 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
     flib_open(f2, WRITE);
 
     // Serie must be multiple of size of int
-    serie_size = m_info.arr_size;
-    serie_size += 5 * sizeof(int);
+    serie_size = bytes / sizeof(int) * sizeof(int);
 
     while(1) {
-        intloaded = flib_read(in_file, m_info.arr1, serie_size / sizeof(int));
+        intloaded = flib_read(in_file, buff, serie_size / sizeof(int));
         if (intloaded == 0) {
             break;
         }
-        qsort(m_info.arr1, (size_t)intloaded, sizeof(int), cmp);
-        flib_write(f1, m_info.arr1, intloaded);
+        qsort(buff, (size_t)intloaded, sizeof(int), cmp);
+        flib_write(f1, buff, intloaded);
         
-        intloaded = flib_read(in_file, m_info.arr1, serie_size / sizeof(int));
+        intloaded = flib_read(in_file, buff, serie_size / sizeof(int));
         if (intloaded == 0) {
             break;
         }
-        qsort(m_info.arr1, (size_t)intloaded, sizeof(int), cmp);
-        flib_write(f2, m_info.arr1, intloaded);
+        qsort(buff, (size_t)intloaded, sizeof(int), cmp);
+        flib_write(f2, buff, intloaded);
     }
     flib_close(in_file);
     flib_close(f1);
     flib_close(f2);
-    
+
+    // Main merge sorting loop 
     while (1) {
         int rc;
         int merges_nr;
@@ -232,6 +250,9 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
         flib_close(f4);
 
         if (merges_nr == 1) {
+            if (f3 != out_file) {
+                copy(f3, out_file, &m_info);
+            }
             printf("Sorting is over\n");
             break;
         }
@@ -240,35 +261,24 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
             exit(1);
         }
 
-        tmp = f1;
-        f1 = f3;
-        f3 = tmp;
-
+        if (merges_nr == 2) {
+            // We are about to do last merge, merge directly to out file
+            f1 = f3;
+            f3 = out_file;
+        }
+        else {
+            tmp = f1;
+            f1 = f3;
+            f3 = tmp;
+        }
         tmp = f2;
         f2 = f4;
         f4 = tmp;
-
+        
         serie_size *= 2;
     }
-
-    // Copy result to outfile
-    flib_open(out_file, WRITE);
-    flib_open(f3, READ);
-
-    while (1) {
-        intloaded = flib_read(f3, m_info.out, m_info.arr_size * 2 / sizeof(int));
-        if (intloaded == 0) {
-            break;
-        }
-        flib_write(out_file, m_info.out, intloaded);
-    }
-
-    flib_close(out_file);
-    flib_close(f3);
-
-    free(m_info.arr1);
-    free(m_info.arr2);
-    free(m_info.out);
+    
+    free(buff);
 }
 
 #ifndef __PROGTEST__
@@ -322,10 +332,10 @@ int main(int argc, char **argv){
     flib_init_files(MAX_FILES);
     int INPUT = 0;
     int RESULT = 1;
-    int SIZE = 43;
+    int SIZE = 140;
 
     create_random(INPUT, SIZE);
-    tarant_allegra(INPUT, RESULT, 70);
+    tarant_allegra(INPUT, RESULT, 1000);
     check_result(RESULT, SIZE);
 
     flib_free_files();
