@@ -181,8 +181,8 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
     int tmp;
     int* buff;
 
-    // Reserve memory for 4 simultaneously opened files, 12 bytes per each
-    bytes -= 4 * 12;
+    // Reserve memory for 4 simultaneously opened files, 16 bytes per each
+    bytes -= 4 * 16;
     if ((unsigned)bytes < 4 * sizeof(int)) {
         printf("Too small memory heap\n");
         exit(1);
