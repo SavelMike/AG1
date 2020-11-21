@@ -188,7 +188,9 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
         exit(1);
     }
     m_info.arr_size = bytes / 4 / sizeof(int) * sizeof(int);
-    buff = (int*)malloc(bytes / sizeof(int) * sizeof(int));
+    m_info.arr_size = 64;
+//    buff = (int*)malloc(bytes / sizeof(int) * sizeof(int));
+    buff = (int*)malloc(64 * 4);
     if (buff == NULL) {
         perror("Malloc failed");
         exit(1);
