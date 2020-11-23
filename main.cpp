@@ -206,7 +206,6 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
 
     // Serie must be multiple of size of int
     serie_size = bytes / sizeof(int) * sizeof(int);
-    serie_size = 64 * 4;
 
     while(1) {
         intloaded = flib_read(in_file, buff, serie_size / sizeof(int));
