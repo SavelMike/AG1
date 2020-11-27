@@ -59,8 +59,8 @@ int64_t flib_read ( uint16_t file_ID, int32_t * buffer, int64_t count ){
     if(!m[file_ID]){ printf("attempted read, but file %d is not open\n", file_ID); exit(USER_ERR); }
     if(m[file_ID]->writable){ printf("attempted read, but file %d is open for writing\n", file_ID); exit(USER_ERR); }
     int red = fread(buffer, sizeof(int), count, m[file_ID]->file);
-    printf("read  %d, %ld numbers, %d red: ", file_ID, count, red);
-    for(int i=0; i<red; ++i) printf("%d ", buffer[i]); printf("\n");
+//    printf("read  %d, %ld numbers, %d red: ", file_ID, count, red);
+//    for(int i=0; i<red; ++i) printf("%d ", buffer[i]); printf("\n");
     return red;
 }
 
@@ -68,8 +68,8 @@ int64_t flib_write ( uint16_t file_ID, int32_t * buffer, int64_t count ){
     if(!m[file_ID]){ printf("attempted write, but file %d is not open\n", file_ID); exit(USER_ERR); }
     if(!m[file_ID]->writable){ printf("attempted write, but file %d is NOT open for writing\n", file_ID); exit(USER_ERR); }
     int written = fwrite(buffer, sizeof(int), count, m[file_ID]->file);
-    printf("write %d, %ld numbers, %d written: ", file_ID, count, written);
-    for(int i=0; i<written; ++i) printf("%d ", buffer[i]); printf("\n");
+//    printf("write %d, %ld numbers, %d written: ", file_ID, count, written);
+//    for(int i=0; i<written; ++i) printf("%d ", buffer[i]); printf("\n");
     return written;
 }
 
