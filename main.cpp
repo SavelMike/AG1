@@ -1,6 +1,5 @@
 #ifndef __PROGTEST__
 #include "flib.h"
-#include <sys/resource.h>
 #endif //__PROGTEST__
 
 struct m_info {
@@ -287,6 +286,10 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
     }
     
     free(buff);
+    flib_remove(2);
+    flib_remove(3);
+    flib_remove(4);
+    flib_remove(5);
 }
 
 #ifndef __PROGTEST__
@@ -337,34 +340,6 @@ void check_result ( int out_file, int SIZE ){
 
 int main(int argc, char **argv){
     const uint16_t MAX_FILES = 65535;
-    struct rlimit rl;
-
-    // Set stack and data limits for the program
-    rl.rlim_cur = 1000;
-    rl.rlim_max = 1000;
-    if (setrlimit(RLIMIT_STACK, &rl) != 0){
-	    perror("Seterimit fail for stack\n");
-	    exit(1);
-    }
-
-    rl.rlim_cur = 2000;
-    rl.rlim_max = 2000;
-    if(setrlimit(RLIMIT_DATA, &rl) != 0){
-	    perror("Setrlimit fail for data\n");
-	    exit(1);
-    }
-
-    if (getrlimit(RLIMIT_STACK, &rl) != 0){
-	    perror("Geterimit fail for stack\n");
-	    exit(1);
-    }
-    printf("Stack limit: rlim_cur = %ld, rlim_max = %ld\n", rl.rlim_cur, rl.rlim_max);
-
-    if(getrlimit(RLIMIT_DATA, &rl) != 0){
-	    perror("Getrlimit fail for data\n");
-	    exit(1);
-    }
-    printf("Data limit: rlim_cur = %ld, rlim_max = %ld\n", rl.rlim_cur, rl.rlim_max);
 
     flib_init_files(MAX_FILES);
     int INPUT = 0;
