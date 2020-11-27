@@ -180,6 +180,8 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
     int64_t intloaded;
     int tmp;
     int* buff;
+    uint16_t removed1 = 65535;
+    uint16_t removed2 = 65535;
 
     // Reserve memory for 4 simultaneously opened files, 16 bytes per each
     bytes -= 4 * 16;
@@ -256,6 +258,7 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
         flib_close(f3);
         flib_close(f4);
 
+        printf("merges_nr = %d\n", merges_nr);
         if (merges_nr == 1) {
             if (f3 != out_file) {
                 copy(f3, out_file, &m_info);
@@ -270,6 +273,10 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
 
         if (merges_nr == 2) {
             // We are about to do last merge, merge directly to out file
+            removed1 = f1;
+            removed2 = f2;
+            flib_remove(f1);
+            flib_remove(f2);
             f1 = f3;
             f3 = out_file;
         }
@@ -286,10 +293,12 @@ void tarant_allegra(int32_t in_file, int32_t out_file, int32_t bytes) {
     }
     
     free(buff);
-    flib_remove(2);
-    flib_remove(3);
-    flib_remove(4);
-    flib_remove(5);
+    
+    for (tmp = 2; tmp <= 5; tmp++) {
+        if (removed1 != tmp && removed2 != tmp) {
+            flib_remove(tmp);
+        }
+    }
 }
 
 #ifndef __PROGTEST__
@@ -347,7 +356,7 @@ int main(int argc, char **argv){
     int SIZE = 140;
 
     create_random(INPUT, SIZE);
-    tarant_allegra(INPUT, RESULT, 1000);
+    tarant_allegra(INPUT, RESULT, 100);
     check_result(RESULT, SIZE);
 
     flib_free_files();
