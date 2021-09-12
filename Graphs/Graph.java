@@ -3,13 +3,18 @@ package Graphs;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+//
+// Directed graph
+//
 public class Graph {
     private ArrayList<ArrayList<Integer>> adjList;
 
+    // default constructor
     public Graph() {
         adjList = new ArrayList<ArrayList<Integer>>();
     }
 
+    // output graph's adajcency list
     public void printGraph() {
         System.out.println("num of elements: " + adjList.size());
         for (ArrayList<Integer> integers : adjList) {
@@ -26,12 +31,14 @@ public class Graph {
     // 4 5 6
     // where first number is vertex, others are adjacent vertices
     // TO DO  input validity control is missing
-    public void readGraph() {
-        Scanner scanner = new Scanner(System.in);
+    public void readGraph(Scanner scanner) {
         while (scanner.hasNextLine()) {
             String input = scanner.nextLine();
 
             Scanner strScan = new Scanner(input);
+            if (!strScan.hasNextInt()) {
+                break;
+            }
             int input2 = strScan.nextInt();
             // Look and add if not found
             int index = search(input2);
@@ -41,6 +48,13 @@ public class Graph {
                 adjList.get(index).add(num);
             }
         }
+    }
+
+    public void addEdge(Integer begin, Integer end) {
+    }
+
+    public void addVertex(Integer vertex) {
+
     }
 
     // search for vertex in graph
@@ -61,5 +75,87 @@ public class Graph {
         }
 
         return index;
+    }
+
+    // not ready
+    public void topSort() throws Exception {
+        while (true) {
+            Integer res = findSourse();
+            if (res == null) {
+                System.out.println("There is no any sources");
+                break;
+            }
+            deleteSourse(res);
+            printGraph();
+        }
+    }
+
+    // helper for findSource and findAllSources
+    private boolean isSource(int vertex) {
+        for (ArrayList<Integer> integers : adjList) {
+            for (int k = 1; k < integers.size(); k++) {
+                if (integers.get(k) == vertex)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    // find source of a graph
+    // return value: first source on the way
+    // if there is no source, throw exception
+    public Integer findSourse() throws Exception {
+        for (ArrayList<Integer> integers : adjList) {
+            if (isSource(integers.get(0))) {
+                return integers.get(0);
+            }
+        }
+        // there is not source, cyclic graph
+        return null;
+    }
+
+    // find all sources of a graph
+    // return value: array list of sources
+    // if there is no source, throw exception
+    public ArrayList<Integer> findAllSources() throws Exception {
+        ArrayList<Integer> res = new ArrayList<>();
+
+        for (ArrayList<Integer> integers : adjList) {
+            if (isSource(integers.get(0))) {
+                res.add(integers.get(0));
+            }
+        }
+
+        if (res.size() == 0)
+            // there is not source, cyclic graph
+            throw new Exception();
+        return res;
+    }
+
+    // Input:
+    //      vertex: source
+    // Task:
+    //      remove adjacency list from the source
+    // If vertex is not a source throw Exception
+    public void deleteSourse(int vertex) throws Exception {
+        if (!isSource(vertex)) {
+            throw new Exception();
+        }
+        for (int i = 0; i < adjList.size(); i++) {
+            if (adjList.get(i).get(0).equals(vertex)) {
+                adjList.remove(i);
+                return;
+            }
+        }
+
+        throw new Exception();
+    }
+
+    public void clear() {
+/*        for (int i = 0; i < adjList.size(); i++) {
+            adjList.get(i).clear();
+        }
+*/
+        adjList.clear();
     }
 }
