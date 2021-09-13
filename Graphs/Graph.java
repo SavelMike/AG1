@@ -127,14 +127,16 @@ public class Graph {
 
     // not ready
     public void topSort() throws Exception {
+        Graph copy = this;
         while (true) {
-            Integer res = findSourse();
+            Integer res = copy.findSourse();
             if (res == null) {
-                System.out.println("There is no any sources");
+                if (copy.adjList.size() > 0)
+                    System.out.println("Graph is cyclic");
                 break;
             }
-            deleteSourse(res);
-            printGraph();
+            System.out.print(res + " ");
+            copy.deleteSourse(res);
         }
     }
 
@@ -200,10 +202,6 @@ public class Graph {
     }
 
     public void clear() {
-/*        for (int i = 0; i < adjList.size(); i++) {
-            adjList.get(i).clear();
-        }
-*/
         adjList.clear();
     }
 }

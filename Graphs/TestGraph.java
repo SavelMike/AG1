@@ -15,6 +15,7 @@ public class TestGraph {
             System.out.println("5 to find source");
             System.out.println("6 to delete source");
             System.out.println("7 to find all sources");
+            System.out.println("8 for TopSort");
             System.out.println("0 to exit");
             Scanner scanner = new Scanner(System.in);
             int opt = 0;
