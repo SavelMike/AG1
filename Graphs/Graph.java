@@ -90,8 +90,19 @@ public class Graph {
         }
     }
 
+    // Input:
+    //     Integer vertex
+    // Task:
+    //     adding vertex
+    //     check for already existing vertex
     public void addVertex(Integer vertex) {
-
+        int listSize = adjList.size();
+        search(vertex);
+        if (listSize == adjList.size()) {
+            System.out.println("Vertex already exists");
+        } else {
+            System.out.println("Vertex " + vertex + " is added");
+        }
     }
 
     // search for vertex in graph
