@@ -125,7 +125,11 @@ public class Graph {
         return index;
     }
 
-    // not ready
+    // Input:
+    // TopSort algorithm
+    // Task:
+    //    ordering of the graph
+    // Lecture 1, [p.14] file:///C:/Users/Savel/Study/AG/BIE-AG1-lec1-anim.pdf
     public void topSort() throws Exception {
         Graph copy = this;
         while (true) {
