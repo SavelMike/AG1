@@ -50,7 +50,44 @@ public class Graph {
         }
     }
 
-    public void addEdge(Integer begin, Integer end) {
+    // Input:
+    //      Integer begin
+    //      Integer end
+    // Task:
+    //      add new edge between vertices
+    //      check for existing edge and non-existing vertices
+    public void addEdge(Integer begin, Integer end) throws Exception {
+        boolean foundBegin = false;
+        boolean foundEnd = false;
+        // Make sure begin and end are in the graph
+        for (ArrayList<Integer> integers : adjList) {
+            if (integers.get(0).equals(begin)) {
+                if (foundBegin) {
+                    // Already seen
+                    throw new Exception();
+                }
+                foundBegin = true;
+                for (int i = 1; i < integers.size(); i++) {
+                    if (integers.get(i).equals(end)) {
+                        System.out.println("Edge " + begin + " -> " + end + " exists");
+                        return;
+                    }
+                }
+            }
+            if (integers.get(0).equals(end)) {
+                if (foundEnd)
+                    // Already seen
+                    throw new Exception();
+                foundEnd = true;
+            }
+        }
+
+        if (foundBegin && foundEnd) {
+            int index = search(begin);
+            adjList.get(index).add(end);
+        } else {
+            System.out.println("There is no vertex " + begin + " or " + end);
+        }
     }
 
     public void addVertex(Integer vertex) {
