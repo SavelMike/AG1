@@ -8,7 +8,7 @@ public class TestGraph {
         Graph graph = new Graph();
 
         while(true) {
-            System.out.println("Enter 1 to add edge");
+            System.out.println("Menu:\n1 to add edge");
             System.out.println("2 to add vertex");
             System.out.println("3 to build graph");
             System.out.println("4 to print graph");
@@ -18,8 +18,7 @@ public class TestGraph {
             System.out.println("8 for TopSort");
             System.out.println("0 to exit");
             Scanner scanner = new Scanner(System.in);
-            int opt = 0;
-            opt = scanner.nextInt();
+            int opt = scanner.nextInt();
             switch (opt) {
                 case 1:
                     System.out.println("Type in begin vertex and end vertex:");
