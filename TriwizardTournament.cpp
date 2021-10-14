@@ -3,6 +3,7 @@
 
 #include <iostream>
 
+// Array of levers will be created while processing the input
 struct Lever
 {
     int vert_dist;
