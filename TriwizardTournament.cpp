@@ -24,9 +24,15 @@ int main()
     int n; // Size of labyrinth of one side
     int k; // Num of levers
     
+    // read size of labyrint and numnber of levers
+    // example: 5 2
     std::cin >> n >> k;
+
+    // Read levers configuration: k lines of format
+    // example:
+    // 2 00110
+    // 3 10100
     struct Lever* levers = new Lever[k];
-    // Read levers configuration
     for (int i = 0; i < k; i++) {
         // Expect 6 001100 (n = 6)
         std::cin >> levers[i].vert_dist;
