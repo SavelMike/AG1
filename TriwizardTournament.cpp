@@ -21,11 +21,16 @@ void print_levers(struct Lever* levers, int n, int k) {
     }
 }
 
-void print_maze(bool** maze, int n) {
+void print_maze(bool** maze, int n, int goblet_i, int goblet_j) {
     std::cout << "Maze:\n";
     for (int i = n - 1; i >= 0; i--) {
         for (int j = 0; j < n; j++) {
-            std::cout << ' ' << maze[i][j] << ' ';
+            if (i == goblet_i && j == goblet_j) {
+                std::cout << " G ";
+            }
+            else {
+                std::cout << ' ' << maze[i][j] << ' ';
+            }
         }
         std::cout << "\n";
     }
@@ -71,14 +76,20 @@ int main()
             }
         }
     }
+
+    // Read Goblet coordinates
+    int goblet_i;
+    int goblet_j;
+    std::cin >> goblet_i >> goblet_j;
  
-    
+    goblet_i--;
+    goblet_j--;
     
     std::cout << "n = " << n << "; k = " << k << "\n";
 
     print_levers(levers, n, k);
 
-    print_maze(maze, n);
+    print_maze(maze, n, goblet_i, goblet_j);
     
     // Free memory
     delete[] levers;
