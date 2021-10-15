@@ -12,10 +12,20 @@ struct Lever
 
 void print_levers(struct Lever* levers, int n, int k) {
     for (int i = 0; i < k; i++) {
-        std::cout <<  levers[i].vert_dist << ' ';
+        std::cout << levers[i].vert_dist << ' ';
 
         for (int j = 0; j < n; j++) {
             std::cout << levers[i].change_vector[j];
+        }
+        std::cout << "\n";
+    }
+}
+
+void print_maze(bool** maze, int n) {
+    std::cout << "Maze:\n";
+    for (int i = n - 1; i >= 0; i--) {
+        for (int j = 0; j < n; j++) {
+            std::cout << ' ' << maze[i][j] << ' ';
         }
         std::cout << "\n";
     }
@@ -43,14 +53,43 @@ int main()
             }
         }
     }
+
+ 
+    // Read maze configuration
+    // Define 2D array of booleans
+    bool** maze = new bool* [n];
+    for (int i = 0; i < n; i++) {
+        maze[i] = new bool[n];
+        for (int j = 0; j < n; j++) {
+            char c;
+            std::cin >> c;
+            if (c == '0') {
+                maze[i][j] = false;
+            }
+            else {
+                maze[i][j] = true;
+            }
+        }
+    }
+ 
+    
     
     std::cout << "n = " << n << "; k = " << k << "\n";
 
     print_levers(levers, n, k);
+
+    print_maze(maze, n);
+    
+    // Free memory
     delete[] levers;
+    for (int i = 0; i < n; i++) {
+        delete[] maze[i];
+    }
+
+    delete[] maze;
+    
     return 0;
 }
-
 
 
 /*
