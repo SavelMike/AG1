@@ -10,6 +10,28 @@ struct Lever
     bool change_vector[1000];
 };
 
+enum cell_state 
+{
+    undef, opened, closed
+};
+
+struct coord
+{
+    int x;
+    int y;
+};
+
+struct maze_cell
+{
+    bool is_wall;
+    int distance;
+    struct coord predecessor;
+    cell_state state;
+};
+
+// Labyrinth
+struct maze_cell** maze;
+
 void print_levers(struct Lever* levers, int n, int k) {
     for (int i = 0; i < k; i++) {
         std::cout << levers[i].vert_dist << ' ';
@@ -21,15 +43,15 @@ void print_levers(struct Lever* levers, int n, int k) {
     }
 }
 
-void print_maze(bool** maze, int n, int goblet_i, int goblet_j) {
+void print_maze(int n, coord* goblet) {
     std::cout << "Maze:\n";
     for (int i = n - 1; i >= 0; i--) {
         for (int j = 0; j < n; j++) {
-            if (i == goblet_i && j == goblet_j) {
+            if (i == goblet->x && j == goblet->y) {
                 std::cout << " G ";
             }
             else {
-                std::cout << ' ' << maze[i][j] << ' ';
+                std::cout << ' ' << maze[i][j].is_wall << ' ';
             }
         }
         std::cout << "\n";
@@ -62,34 +84,35 @@ int main()
  
     // Read maze configuration
     // Define 2D array of booleans
-    bool** maze = new bool* [n];
+    maze = new struct maze_cell* [n];
     for (int i = 0; i < n; i++) {
-        maze[i] = new bool[n];
+        maze[i] = new struct maze_cell[n];
         for (int j = 0; j < n; j++) {
             char c;
             std::cin >> c;
             if (c == '0') {
-                maze[i][j] = false;
+                maze[i][j].is_wall = false;
             }
             else {
-                maze[i][j] = true;
+                maze[i][j].is_wall = true;
             }
+            // Initiliazation of other fileds is in BFS
         }
     }
 
     // Read Goblet coordinates
-    int goblet_i;
-    int goblet_j;
-    std::cin >> goblet_i >> goblet_j;
+    coord goblet;
+    
+    std::cin >> goblet.x >> goblet.y;
  
-    goblet_i--;
-    goblet_j--;
+    goblet.x--;
+    goblet.y--;
     
     std::cout << "n = " << n << "; k = " << k << "\n";
 
     print_levers(levers, n, k);
 
-    print_maze(maze, n, goblet_i, goblet_j);
+    print_maze(n, &goblet);
     
     // Free memory
     delete[] levers;
