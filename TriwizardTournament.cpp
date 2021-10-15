@@ -12,10 +12,12 @@ struct Lever
 
 void print_levers(struct Lever* levers, int n, int k) {
     for (int i = 0; i < k; i++) {
-        std::cout << levers[i].vert_dist;
+        std::cout <<  levers[i].vert_dist << ' ';
+
         for (int j = 0; j < n; j++) {
             std::cout << levers[i].change_vector[j];
         }
+        std::cout << "\n";
     }
 }
 
@@ -31,13 +33,21 @@ int main()
         // Expect 6 001100 (n = 6)
         std::cin >> levers[i].vert_dist;
         for (int j = 0; j < n; j++) {
-            std::cin >> levers[i].change_vector[j];
+            char c;
+            std::cin >> c;
+            if (c == '0') {
+                levers[i].change_vector[j] = false;
+            }
+            else {
+                levers[i].change_vector[j] = true;
+            }
         }
     }
     
     std::cout << "n = " << n << "; k = " << k << "\n";
 
     print_levers(levers, n, k);
+    delete[] levers;
     return 0;
 }
 
