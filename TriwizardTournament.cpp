@@ -118,15 +118,15 @@ void print_levers(struct lever* levers, int k) {
     }
 }
 
-void print_maze(struct coord* goblet) {
-    std::cout << "Maze:\n";
+void print_maze(struct coord* goblet, char* msg) {
+    std::cout << "Maze: " << msg << "\n";
     for (int i = maze.n - 1; i >= 0; i--) {
         for (int j = 0; j < maze.n; j++) {
             if (i == goblet->x && j == goblet->y) {
                 std::cout << " G ";
             }
             else {
-                std::cout << ' ' << maze.map[i][j].is_wall << ',' << maze.map[i][j].state << ' ';
+                std::cout << ' ' << maze.map[i][j].is_wall << ' ';
             }
         }
         std::cout << "\n";
@@ -134,6 +134,8 @@ void print_maze(struct coord* goblet) {
 }
 
 void bfs(struct coord* start);
+
+void activate_lever(struct lever* lev);
 
 int main(void)
 {
@@ -192,6 +194,33 @@ int main(void)
     print_levers(levers, k);
 
     coord start = { 0, 0 };
+
+    print_maze(&goblet, "initial state");
+    for (int i = 0; i < k; i++) {
+        activate_lever(&levers[i]);
+    }
+    print_maze(&goblet, "after activation");
+    // Restore maze to first state
+    for (int i = k - 1; i >= 0; i--) {
+        activate_lever(&levers[i]);
+    }
+    print_maze(&goblet, "after restore");
+
+    // Apply levers in opposite order
+    for (int i = k - 1; i >= 0; i--) {
+        activate_lever(&levers[i]);
+    }
+    print_maze(&goblet, "after reverse activation");
+
+    int num_search = 1<<k;
+    for (int i = 0; i < num_search; i++) {
+        // Modify labyrinth
+        for (int j = 0; j < k; j++) {
+            if (i & (1<<j))
+                activate_lever();
+        }
+        bfs(&start);
+    }
 
     bfs(&start);
     
@@ -268,6 +297,20 @@ bool check_adjacents(struct coord* centr) {
     return false;
 }
 
+// Modify labyrinth by given laver
+void activate_lever(struct lever* lev) {
+    for (int i = 0; i < maze.n; i++) {
+        for (int j = 0; j < maze.n; j++) {
+            if (maze.map[i][j].is_wall == lev->change_vector[j]) {
+                maze.map[i][j].is_wall = false;
+            }
+            else {
+                maze.map[i][j].is_wall = true;
+            }
+        }
+    }
+}
+
 void print_path(struct coord* cur) {
     if (maze.map[cur->x][cur->y].predecessor.x != -1) {
         print_path(&maze.map[cur->x][cur->y].predecessor);
@@ -293,7 +336,7 @@ void bfs(struct coord* start) {
             maze.map[i][j].predecessor.y = -1;
         }    
     }
-    print_maze(&goblet);
+    print_maze(&goblet, "Before bfs");
     enqueue(start);
     maze.map[start->x][start->y].state = opened;
     maze.map[start->x][start->y].distance = 0;
