@@ -63,6 +63,12 @@ void enqueue(struct coord* cell) {
  //   print_queue();
 }
 
+void clear_queue(void) {
+    while (queue.head != NULL) {
+        dequeue();
+    }
+}
+
 void print_queue(void) {
     if (queue.head == NULL) {
         std::cout << "Empty queue : tail = " << queue.tail << '\n';
@@ -122,11 +128,12 @@ void print_maze(struct coord* goblet, char* msg) {
     std::cout << "Maze: " << msg << "\n";
     for (int i = maze.n - 1; i >= 0; i--) {
         for (int j = 0; j < maze.n; j++) {
+            std::cout << ' ' << maze.map[i][j].is_wall;
             if (i == goblet->x && j == goblet->y) {
-                std::cout << " G ";
+                std::cout << "* ";
             }
             else {
-                std::cout << ' ' << maze.map[i][j].is_wall << ' ';
+                std::cout << "  ";
             }
         }
         std::cout << "\n";
@@ -195,34 +202,27 @@ int main(void)
 
     coord start = { 0, 0 };
 
-    print_maze(&goblet, "initial state");
-    for (int i = 0; i < k; i++) {
-        activate_lever(&levers[i]);
-    }
-    print_maze(&goblet, "after activation");
-    // Restore maze to first state
-    for (int i = k - 1; i >= 0; i--) {
-        activate_lever(&levers[i]);
-    }
-    print_maze(&goblet, "after restore");
+    print_maze(&goblet, "initial maze");
 
-    // Apply levers in opposite order
-    for (int i = k - 1; i >= 0; i--) {
-        activate_lever(&levers[i]);
-    }
-    print_maze(&goblet, "after reverse activation");
-
+    // Number of possible labyrinths, for k lavers there are 2^k labyrinths
     int num_search = 1<<k;
     for (int i = 0; i < num_search; i++) {
         // Modify labyrinth
         for (int j = 0; j < k; j++) {
-            if (i & (1<<j))
-                activate_lever();
+            if (i & (1 << j)) {
+                activate_lever(&levers[j]);
+            }
         }
+        print_maze(&goblet, "labyrinth to work with");
         bfs(&start);
+        // Restore labyrinth
+        for (int j = 0; j < k; j++) {
+            if (i & (1 << j)) {
+                activate_lever(&levers[j]);
+            }
+        }
+        print_maze(&goblet, "restored maze");
     }
-
-    bfs(&start);
     
     // Free memory
     delete[] levers;
@@ -336,7 +336,6 @@ void bfs(struct coord* start) {
             maze.map[i][j].predecessor.y = -1;
         }    
     }
-    print_maze(&goblet, "Before bfs");
     enqueue(start);
     maze.map[start->x][start->y].state = opened;
     maze.map[start->x][start->y].distance = 0;
@@ -356,4 +355,6 @@ void bfs(struct coord* start) {
     else {
         std::cout << "Goblet not found\n";
     }
+    
+    clear_queue();
 }
