@@ -113,29 +113,39 @@ struct {
 // Coordinates of goblet
 struct coord goblet;
 
-int short_path_len;
-
-struct coord* shortest_path;
+// Found path info
+struct {
+    int path_len;
+    int lever_len;
+    struct coord* path;
+    bool levers[10]; // Number of levers is less or equal to 10
+    int nlevers;
+} path_info = {0, 0, NULL, NULL, 0};
 
 // bfs algorithm found path from source to target
 // length of path is in maze.map[goblet.x][goblet.y].distance
-void save_found_path(void) {
-    short_path_len = maze.map[goblet.x][goblet.y].distance;
-    shortest_path = new struct coord[short_path_len + 1];
-    shortest_path[short_path_len] = goblet;
+void save_found_path(int lever_path_len) {
+    if (path_info.path != NULL) {
+        delete[] path_info.path;
+    }
+    
+    path_info.lever_len = lever_path_len;
+    path_info.path_len = maze.map[goblet.x][goblet.y].distance;
+    path_info.path = new struct coord[path_info.path_len + 1];
+    path_info.path[path_info.path_len] = goblet;
     int i1 = goblet.x; 
     int j1 = goblet.y;
-    for (int i = short_path_len - 1; i >= 0; i--) {
-        shortest_path[i] = maze.map[i1][j1].predecessor;
-        i1 = shortest_path[i].x;
-        j1 = shortest_path[i].y;
+    for (int i = path_info.path_len - 1; i >= 0; i--) {
+        path_info.path[i] = maze.map[i1][j1].predecessor;
+        i1 = path_info.path[i].x;
+        j1 = path_info.path[i].y;
     }
 }
 
 void print_found_path(void) {
-    for (int i = 0; i < short_path_len + 1; i++) {
-        std::cout << "[" << shortest_path[i].x + 1 << ";" << shortest_path[i].y + 1 << "]";
-        if (i == short_path_len) {
+    for (int i = 0; i < path_info.path_len + 1; i++) {
+        std::cout << "[" << path_info.path[i].x + 1 << ";" << path_info.path[i].y + 1 << "]";
+        if (i == path_info.path_len) {
             std::cout << "\n";
         }
         else {
@@ -171,24 +181,23 @@ void print_maze(struct coord* goblet, char* msg) {
     }
 }
 
-void bfs(struct coord* start);
+bool bfs(struct coord* start);
 
 void activate_lever(struct lever* lev);
 
 int main(void)
 {
-    int k; // Num of levers
-    
     // read size of labyrint and numnber of levers
     // example: 5 2
-    std::cin >> maze.n >> k;
+    std::cin >> maze.n >> path_info.nlevers;
+    
 
     // Read levers configuration: k lines of format
     // example:
     // 2 00110
     // 3 10100
-    struct lever* levers = new lever[k];
-    for (int i = 0; i < k; i++) {
+    struct lever* levers = new lever[path_info.nlevers];
+    for (int i = 0; i < path_info.nlevers; i++) {
         // Expect 6 001100 (n = 6)
         std::cin >> levers[i].vert_dist;
         for (int j = 0; j < maze.n; j++) {
@@ -209,14 +218,16 @@ int main(void)
     maze.map = new struct maze_cell* [maze.n];
     for (int i = 0; i < maze.n; i++) {
         maze.map[i] = new struct maze_cell[maze.n];
+    }
+    for (int i = 0; i < maze.n; i++) {
         for (int j = 0; j < maze.n; j++) {
             char c;
             std::cin >> c;
             if (c == '0') {
-                maze.map[i][j].is_wall = false;
+                maze.map[j][i].is_wall = false;
             }
             else {
-                maze.map[i][j].is_wall = true;
+                maze.map[j][i].is_wall = true;
             }
             // Initialization of other fileds is in BFS
         }
@@ -227,30 +238,58 @@ int main(void)
     goblet.x--;
     goblet.y--;
     
-    std::cout << "n = " << maze.n << "; k = " << k << "\n";
-
- //   print_levers(levers, k);
-
-    coord start = { 0, 0 };
+    struct coord start = { 0, 0 };
 
     // Number of possible labyrinths, for k lavers there are 2^k labyrinths
-    int num_search = 1<<k;
+    int num_search = 1<< path_info.nlevers;
     for (int i = 0; i < num_search; i++) {
         // Modify labyrinth
-        for (int j = 0; j < k; j++) {
+        int path_to_lever = 0;
+        bool cur_levers[10];
+        for (int j = 0; j < path_info.nlevers; j++) {
             if (i & (1 << j)) {
                 activate_lever(&levers[j]);
+                path_to_lever += levers[j].vert_dist * 2;
+                cur_levers[j] = true;
+            }
+            else {
+                cur_levers[j] = false;
             }
         }
-        bfs(&start);
+        if (path_to_lever < path_info.path_len + path_info.lever_len || 
+            path_info.path_len == 0) {
+            if (bfs(&start)) {
+                // Check if it is shortest path
+                if (path_info.path_len + path_info.lever_len > path_to_lever + maze.map[goblet.x][goblet.y].distance ||
+                    path_info.path_len == 0) {
+                    save_found_path(path_to_lever);
+                    for (int k = 0; k < path_info.nlevers; k++) {
+                        path_info.levers[k] = cur_levers[k];
+                    }
+                }
+            }
+        }
         // Restore labyrinth
-        for (int j = 0; j < k; j++) {
+        for (int j = 0; j < path_info.nlevers; j++) {
             if (i & (1 << j)) {
                 activate_lever(&levers[j]);
             }
         }
     }
-    
+
+    if (path_info.path_len != 0) {
+        // There is shortest path
+        std::cout << path_info.path_len + path_info.lever_len << "\n";
+        for (int k = 0; k < path_info.nlevers; k++) {
+            std::cout << path_info.levers[k];
+        }
+        if (path_info.nlevers != 0)
+            std::cout << "\n";
+        print_found_path();
+    }
+    else {
+        std::cout << -1;
+    }
     // Free memory
     delete[] levers;
     for (int i = 0; i < maze.n; i++) {
@@ -339,7 +378,10 @@ void activate_lever(struct lever* lev) {
 }
 
 // Breadth-first search
-void bfs(struct coord* start) {
+// return value:
+//          true if path found
+//          false otherwise
+bool bfs(struct coord* start) {
     bool found = false;
     // Initialization of state, distance and predecessor
     for (int i = 0; i < maze.n; i++) {
@@ -361,15 +403,7 @@ void bfs(struct coord* start) {
         }
         maze.map[first_el.x][first_el.y].state = closed;
     }
-
-    if (found) {
-        std::cout << "found; path length = " << maze.map[goblet.x][goblet.y].distance << "\n";
-        save_found_path();
-        print_found_path();
-    }
-    else {
-        std::cout << "Goblet not found\n";
-    }
     
     clear_queue();
+    return found;
 }
