@@ -105,7 +105,7 @@ struct {
     struct coord* path;
     bool levers[10]; // Number of levers is less or equal to 10
     int nlevers;
-} path_info = {0, 0, NULL, NULL, 0};
+} path_info = {-1, 0, NULL, NULL, 0};
 
 // bfs algorithm found path from source to target
 // length of path is in maze.map[goblet.x][goblet.y].distance
@@ -218,11 +218,11 @@ int main(void)
             }
         }
         if ((dist_to_lever < path_info.path_len + path_info.lever_len || 
-            path_info.path_len == 0) && (!maze.map[start.x][start.y].is_wall)) {
+            path_info.path_len == -1) && (!maze.map[start.x][start.y].is_wall)) {
             if (bfs(&start)) {
                 // Check if it is shortest path
                 if (path_info.path_len + path_info.lever_len > dist_to_lever + maze.map[goblet.x][goblet.y].distance ||
-                    path_info.path_len == 0) {
+                    path_info.path_len == -1) {
                     save_found_path(dist_to_lever);
                     for (int k = 0; k < path_info.nlevers; k++) {
                         path_info.levers[k] = cur_levers[k];
@@ -238,7 +238,7 @@ int main(void)
         }
     }
 
-    if (path_info.path_len != 0) {
+    if (path_info.path_len != -1) {
         // There is shortest path
         std::cout << path_info.path_len + path_info.lever_len << "\n";
         for (int k = 0; k < path_info.nlevers; k++) {
@@ -249,7 +249,7 @@ int main(void)
         print_found_path();
     }
     else {
-        std::cout << -1 << "\n";
+        std::cout << "-1";
     }
     // Free memory
     if (path_info.path != NULL)
@@ -287,6 +287,11 @@ bool check_pair(struct coord* centr, struct coord* neighbour) {
 bool check_adjacents(struct coord* centr) {
 
     struct coord neighbour;
+
+    // Check itself
+    if (centr->x == goblet.x && centr->y == goblet.y) {
+        return true;
+    }
 
     // Check top
     if (centr->y != 0) {
