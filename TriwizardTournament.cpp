@@ -291,6 +291,8 @@ int main(void)
         std::cout << -1;
     }
     // Free memory
+    if (path_info.path != NULL)
+        delete[] path_info.path;
     delete[] levers;
     for (int i = 0; i < maze.n; i++) {
         delete[] maze.map[i];
