@@ -22,8 +22,6 @@ struct
     struct queue_element* tail;
 } queue = {NULL, NULL};
 
-void print_queue(void);
-
 // Remove first element from the queue
 // return value:
 //      struct coord
@@ -67,19 +65,6 @@ void clear_queue(void) {
     while (queue.head != NULL) {
         dequeue();
     }
-}
-
-void print_queue(void) {
-    if (queue.head == NULL) {
-        std::cout << "Empty queue : tail = " << queue.tail << '\n';
-        return;
-    }
-    struct queue_element* qe = queue.head;
-    while (qe != NULL) {
-        std::cout << " [" << qe->cell.x << ';' << qe->cell.y << "]";
-        qe = qe->next;
-    }
-    std::cout << "\n";
 }
 
 // Array of levers will be created while processing the input
@@ -154,33 +139,6 @@ void print_found_path(void) {
     }
 }
 
-void print_levers(struct lever* levers, int k) {
-    for (int i = 0; i < k; i++) {
-        std::cout << levers[i].vert_dist << ' ';
-
-        for (int j = 0; j < maze.n; j++) {
-            std::cout << levers[i].change_vector[j];
-        }
-        std::cout << "\n";
-    }
-}
-
-void print_maze(struct coord* goblet, char* msg) {
-    std::cout << "Maze: " << msg << "\n";
-    for (int i = maze.n - 1; i >= 0; i--) {
-        for (int j = 0; j < maze.n; j++) {
-            std::cout << ' ' << maze.map[i][j].is_wall;
-            if (i == goblet->x && j == goblet->y) {
-                std::cout << "* ";
-            }
-            else {
-                std::cout << "  ";
-            }
-        }
-        std::cout << "\n";
-    }
-}
-
 bool bfs(struct coord* start);
 
 void activate_lever(struct lever* lev);
@@ -190,7 +148,6 @@ int main(void)
     // read size of labyrint and numnber of levers
     // example: 5 2
     std::cin >> maze.n >> path_info.nlevers;
-    
 
     // Read levers configuration: k lines of format
     // example:
@@ -292,7 +249,7 @@ int main(void)
         print_found_path();
     }
     else {
-        std::cout << -1;
+        std::cout << -1 << "\n";
     }
     // Free memory
     if (path_info.path != NULL)
