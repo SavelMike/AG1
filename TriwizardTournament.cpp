@@ -244,25 +244,29 @@ int main(void)
     int num_search = 1<< path_info.nlevers;
     for (int i = 0; i < num_search; i++) {
         // Modify labyrinth
-        int path_to_lever = 0;
+        int dist_to_lever = 0;
+        int cur_dist_to_lever = 0;
         bool cur_levers[10];
         for (int j = 0; j < path_info.nlevers; j++) {
             if (i & (1 << j)) {
                 activate_lever(&levers[j]);
-                path_to_lever += levers[j].vert_dist * 2;
+                cur_dist_to_lever = levers[j].vert_dist * 2;
+                if (dist_to_lever < cur_dist_to_lever) {
+                    dist_to_lever = cur_dist_to_lever;
+                }
                 cur_levers[j] = true;
             }
             else {
                 cur_levers[j] = false;
             }
         }
-        if (path_to_lever < path_info.path_len + path_info.lever_len || 
-            path_info.path_len == 0) {
+        if ((dist_to_lever < path_info.path_len + path_info.lever_len || 
+            path_info.path_len == 0) && (!maze.map[start.x][start.y].is_wall)) {
             if (bfs(&start)) {
                 // Check if it is shortest path
-                if (path_info.path_len + path_info.lever_len > path_to_lever + maze.map[goblet.x][goblet.y].distance ||
+                if (path_info.path_len + path_info.lever_len > dist_to_lever + maze.map[goblet.x][goblet.y].distance ||
                     path_info.path_len == 0) {
-                    save_found_path(path_to_lever);
+                    save_found_path(dist_to_lever);
                     for (int k = 0; k < path_info.nlevers; k++) {
                         path_info.levers[k] = cur_levers[k];
                     }
