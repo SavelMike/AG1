@@ -16,6 +16,7 @@ public:
 	MinBinHeap(unsigned n);
 	MinBinHeap(const char *file);
 		
+	void HeapLoad(void);
 	void HeapInsert(int val);
 	int HeapFindMin(void);
 	int HeapExtractMin();
@@ -56,6 +57,17 @@ MinBinHeap::MinBinHeap(unsigned n) : array(n)
 {
 	for (unsigned i = 0; i < n; i++)
 		this->array[i] = rand() % (n * 2) + 1;
+
+	this->HeapBuild();
+}
+
+void MinBinHeap::HeapLoad(void)
+{
+	int n;
+
+	std::cout << "Enter number to be put into heap, ctrl-d to stop\n";
+	while (std::cin >> n)
+		this->array.push_back(n);
 
 	this->HeapBuild();
 }
@@ -182,7 +194,9 @@ void MinBinHeap::HeapSort(void)
 
 int main(void)
 {
-	MinBinHeap heap(10);
+	MinBinHeap heap;
+
+	heap.HeapLoad();
 
 	heap.HeapPrint();
 
