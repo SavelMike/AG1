@@ -3,19 +3,19 @@
  */
 
 #include <iostream>
+#include <vector>
 #include <cstdlib>
 
 class MinBinHeap {
 private:
-	int *arr;
-	int size;
-	int memsize;
+	std::vector<int> array;
+
 public:
 	MinBinHeap();
 	MinBinHeap(int n);
 	MinBinHeap(const char *file);
 		
-	void HeapInsert();
+	void HeapInsert(int n);
 	int HeapFindMin(void);
 	int HeapExtractMin();
 	void HeapPrint(void);
@@ -27,13 +27,11 @@ public:
  */
 MinBinHeap::MinBinHeap()
 {
-	this->arr = nullptr;
-	this->size = 0;
 }
 
 /*
  * Round up a number to power of 2
- *	n = 10, rc = 16
+ *	example: n = 10, rc = 16
  */
 int ceil2(int n)
 {
@@ -48,22 +46,27 @@ int ceil2(int n)
  * Random data filled heap of size n constructor
  *	create heap of n element, fill with random data
  */
-MinBinHeap::MinBinHeap(int n)
+MinBinHeap::MinBinHeap(int n) : array(n)
 {
-	this->memsize = ceil2(n);
-	this->arr = new int[this->memsize];
-
 	for (int i = 0; i < n; i++)
-		this->arr[i] = rand();
-	this->size = n;
+		this->array[i] = rand();
 }
 
 void MinBinHeap::HeapPrint(void)
 {
-	for (int i = 0; i < this->size; i++) {
-		std::cout << " " << this->arr[i];
+	std::cout << "Array size: " << this->array.size() << "\n";
+	for (unsigned i = 0; i < this->array.size(); i++) {
+		std::cout << " " << this->array[i];
 	}
 	std::cout << "\n";
+}
+
+/*
+ *
+ */
+void MinBinHeap::HeapInsert(int n)
+{
+	this->array.push_back(n);
 }
 
 int main(void)
