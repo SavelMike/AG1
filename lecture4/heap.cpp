@@ -3,6 +3,7 @@
  */
 
 #include <iostream>
+#include <random>
 #include <vector>
 #include <cstdlib>
 
@@ -12,13 +13,16 @@ private:
 
 public:
 	MinBinHeap();
-	MinBinHeap(int n);
+	MinBinHeap(unsigned n);
 	MinBinHeap(const char *file);
 		
-	void HeapInsert(int n);
+	void HeapInsert(int val);
 	int HeapFindMin(void);
 	int HeapExtractMin();
 	void HeapPrint(void);
+	bool IsLeaf(unsigned idx);
+	void BubbleDown(unsigned idx);
+	void HeapBuild(void);
 };
 
 /*
@@ -46,17 +50,72 @@ int ceil2(int n)
  * Random data filled heap of size n constructor
  *	create heap of n element, fill with random data
  */
-MinBinHeap::MinBinHeap(int n) : array(n)
+MinBinHeap::MinBinHeap(unsigned n) : array(n)
 {
-	for (int i = 0; i < n; i++)
-		this->array[i] = rand();
+	for (unsigned i = 0; i < n; i++)
+		this->array[i] = rand() % (n * 2) + 1;
+
+	this->HeapBuild();
+}
+
+/*
+ * if there are n vertices in heap, first n/2 are not leaves
+ */
+bool MinBinHeap::IsLeaf(unsigned n)
+{
+	return n > this->array.size() / 2;
+}
+
+/*
+ * AG1, lecture 4, page 32
+ * Note: index is from 1 to this->array.size(). Use -1 when accessing array elements
+ */
+void MinBinHeap::BubbleDown(unsigned index)
+{
+	unsigned childidx;
+
+	while (!this->IsLeaf(index)) {
+		/* child with smaller key */
+		childidx = index * 2;
+		if (this->array.size() > childidx &&
+		    this->array[childidx + 1 - 1] < this->array[childidx - 1])
+			/* there is right child and it is smaller */
+			childidx++;
+
+		if (this->array[index - 1] <= this->array[childidx - 1])
+			return;
+
+		/* swap index-th vertex with the child */
+		int tmp = this->array[index - 1];
+		this->array[index - 1] = this->array[childidx - 1];
+		this->array[childidx - 1] = tmp;
+
+		index = childidx;
+	}
+}
+
+/*
+ *
+ */
+void MinBinHeap::HeapBuild(void)
+{
+	for (int i = this->array.size() / 2; i >= 1; i--)
+		this->BubbleDown(i);
 }
 
 void MinBinHeap::HeapPrint(void)
 {
 	std::cout << "Array size: " << this->array.size() << "\n";
+	int levelsize = 1;
+	int levelcnt = 0;
 	for (unsigned i = 0; i < this->array.size(); i++) {
+		if (levelsize == levelcnt) {
+			std::cout << "\n";
+			levelsize *= 2;
+			levelcnt = 0;
+		}
 		std::cout << " " << this->array[i];
+		levelcnt++;
 	}
 	std::cout << "\n";
 }
