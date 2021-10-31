@@ -24,6 +24,7 @@ public:
 	void BubbleDown(unsigned idx);
 	void BubbleUp(unsigned index);
 	void HeapBuild(void);
+	void HeapSort(void);
 };
 
 /*
@@ -96,7 +97,7 @@ void MinBinHeap::BubbleDown(unsigned index)
 }
 
 /*
- * AG1, lecture 4, page 32
+ * AG1, lecture 4, page 29
  * Note: index is from 1 to this->array.size(). Use -1 when accessing array elements
  */
 void MinBinHeap::BubbleUp(unsigned index)
@@ -153,6 +154,32 @@ void MinBinHeap::HeapInsert(int n)
 	this->BubbleUp(this->array.size());
 }
 
+/*
+ * AG1, lecture 4, page 32
+ */
+int MinBinHeap::HeapExtractMin(void)
+{
+	/* swap first and last (root and rightmost leaf) */
+	int rc = this->array[0];
+
+	this->array[0] = this->array[this->array.size() - 1];
+	this->array.pop_back();
+
+	if (this->array.size())
+		this->BubbleDown(1);
+	return rc;
+}
+
+/*
+ * Note: destroying version
+ */
+void MinBinHeap::HeapSort(void)
+{
+	while (this->array.size())
+		std::cout << " " << this->HeapExtractMin();
+	std::cout << "\n";
+}
+
 int main(void)
 {
 	MinBinHeap heap(10);
@@ -162,6 +189,11 @@ int main(void)
 	heap.HeapInsert(-20);
 
 	heap.HeapPrint();
+
+	heap.HeapSort();
+
+	heap.HeapPrint();
+
 
 	return 0;
 }
