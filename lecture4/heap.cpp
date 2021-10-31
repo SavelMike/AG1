@@ -22,6 +22,7 @@ public:
 	void HeapPrint(void);
 	bool IsLeaf(unsigned idx);
 	void BubbleDown(unsigned idx);
+	void BubbleUp(unsigned index);
 	void HeapBuild(void);
 };
 
@@ -95,6 +96,29 @@ void MinBinHeap::BubbleDown(unsigned index)
 }
 
 /*
+ * AG1, lecture 4, page 32
+ * Note: index is from 1 to this->array.size(). Use -1 when accessing array elements
+ */
+void MinBinHeap::BubbleUp(unsigned index)
+{
+	unsigned parent;
+
+	while (index != 1) {
+		parent = index / 2;
+
+		if (this->array[parent - 1] <= this->array[index - 1])
+			return;
+
+		/* swap index-th vertex with its parent */
+		int tmp = this->array[index - 1];
+		this->array[index - 1] = this->array[parent - 1];
+		this->array[parent - 1] = tmp;
+
+		index = parent;
+	}
+}
+
+/*
  *
  */
 void MinBinHeap::HeapBuild(void)
@@ -126,11 +150,16 @@ void MinBinHeap::HeapPrint(void)
 void MinBinHeap::HeapInsert(int n)
 {
 	this->array.push_back(n);
+	this->BubbleUp(this->array.size());
 }
 
 int main(void)
 {
 	MinBinHeap heap(10);
+
+	heap.HeapPrint();
+
+	heap.HeapInsert(-20);
 
 	heap.HeapPrint();
 
