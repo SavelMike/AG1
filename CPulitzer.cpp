@@ -305,11 +305,26 @@ bool CPulitzer::create_coalition(uint32_t id_party1, uint32_t id_party2) {
 // or the party does not exist at all, the method returns false.
 // Otherwise, the method returns true.
 bool CPulitzer::leave_coalition(uint32_t id_party) {
-
     if (!party_exists(id_party) || parties[id_party].coalition == 0) {
         return false;
     }
+    uint32_t coalition = parties[id_party].coalition;
     parties[id_party].coalition = 0;
+
+    // Check whether only one party is still in coalition
+    uint32_t cnt_left_parties = 0;
+    uint32_t id_left_party = 0;
+    for (uint32_t i = 0; i < N; i++) {
+        if (parties[i].coalition == coalition) {
+            cnt_left_parties++;
+            id_left_party = i;
+        }
+    }
+    if (cnt_left_parties == 1) {
+        // Last party in coalition leaves coalition
+        parties[id_left_party].coalition = 0;
+    }
+    
     return true;
 }
 
