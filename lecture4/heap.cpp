@@ -200,7 +200,7 @@ int main(void)
 
 	heap.HeapPrint();
 
-	heap.HeapInsert(-20);
+	return 0;
 
 	heap.HeapPrint();
 
