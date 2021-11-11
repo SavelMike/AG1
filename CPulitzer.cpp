@@ -34,7 +34,7 @@ private:
     }
     
     bool party_exists(uint32_t id_party) const {
-        return parties[id_party].coalition = numeric_limits<uint32_t>::max();
+        return parties[id_party].coalition != numeric_limits<uint32_t>::max();
     }
 
     void cancel_party(uint32_t id_party) {
@@ -95,16 +95,20 @@ public:
 CPulitzer::CPulitzer(size_t N, size_t P)
 {
     this->P = P;
-    this->politicians = new struct politician[P];
+    politicians = new struct politician[P];
     // mark all lines in array as free
     for (size_t i = 0; i < P; i++) {
-        this->politicians[i].generation = numeric_limits<uint32_t>::max();
+        politicians[i].generation = numeric_limits<uint32_t>::max();
+        politicians[i].gender = 0;
+        politicians[i].id_party = 0;
+        politicians[i].popularity = 0;
+        politicians[i].name = string("");
     }
     this->N = N;
-    this->parties = new struct party[N];
+    parties = new struct party[N];
     // mark all lines in array as free
     for (size_t i = 0; i < N; i++) {
-        this->parties[i].coalition = numeric_limits<uint32_t>::max();
+        parties[i].coalition = numeric_limits<uint32_t>::max();
     }
 }
 
@@ -390,8 +394,10 @@ void  CPulitzer::print() {
     }
 }
 
+#endif
 
-int main()
+
+int example1()
 {
     uint32_t id_leader;
     CPulitzer bot(3, 10);
@@ -413,14 +419,56 @@ int main()
     assert(bot.change_popularity(9, 200) == true); // true
     assert(bot.sack_leader(1) == true); // true
 
-    bot.print();
-    string name;
- 
-    cin.get();
+    return 0;
+}
+
+int example2() {
+    uint32_t id_leader;
+
+    CPulitzer bot(5, 5);
+    assert(bot.register_politician(0, 0, "RS", 150, 77) == true); // true
+    assert(bot.register_politician(1, 1, "RS", 50, 77) == true); // true
+    assert(bot.register_politician(2, 2, "RS", 60, 77) == true); // true
+    assert(bot.register_politician(3, 3, "VKml", 100, 77) == true); // true
+    assert(bot.register_politician(3, 4, "ZMZ", 50, 70) == true); // true
+    assert(bot.deregister_politician(3) == true); // true
+    assert(bot.merge_parties(3, 2) == true); // true
+    assert(bot.merge_parties(3, 1) == true); // true
+    assert(bot.party_leader(0, id_leader) == true && id_leader == 0); // true, 0
+    assert(bot.party_leader(1, id_leader) == false); // false
+    assert(bot.party_leader(2, id_leader) == false); // false
+    assert(bot.party_leader(3, id_leader) == true && id_leader == 2); // true, 2
 
     return 0;
 }
-#endif
+
+int example3() {;
+    uint32_t id_leader;
+
+    CPulitzer bot(10, 10);
+    assert(bot.register_politician(9, 1, "MK", 100, 77) == true); // true
+    assert(bot.register_politician(0, 0, "IB", 150, 77) == true); // true
+    assert(bot.register_politician(1, 2, "VR", 50, 77) == true); // true
+    assert(bot.create_coalition(9, 1) == true); // true
+    assert(bot.leave_coalition(1) == true); // true
+    assert(bot.create_coalition(0, 1) == true); // true
+    assert(bot.coalition_leader(0, id_leader) == true && id_leader == 0); // true, 0
+    assert(bot.coalition_leader(1, id_leader) == true && id_leader == 0); // true, 0
+    assert(bot.coalition_leader(9, id_leader) == true && id_leader == 1); // true, 1
+    assert(bot.change_popularity(2, 200) == true); // true
+    assert(bot.coalition_leader(0, id_leader) == true && id_leader == 2); // true, 2
+    assert(bot.leave_coalition(9) == false); // false
+
+    return 0;
+}
+
+int main() {
+    example1();
+    example2();
+    example3();
+
+    return 0;
+}
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
