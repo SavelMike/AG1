@@ -1,6 +1,6 @@
 // CPulitzer.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-#ifndef _PROGTEST_
+#ifndef __PROGTEST__
 #include <iostream>
 #include <iomanip>
 #include <cassert>
@@ -62,7 +62,7 @@ public:
 
     CPulitzer(size_t N, size_t P);
 
-#ifndef _PROGTEST_
+#ifndef __PROGTEST__
     ~CPulitzer();
 #endif // !_PROGTEST_
 
@@ -119,7 +119,7 @@ CPulitzer::CPulitzer(size_t N, size_t P)
     }
 }
 
-#ifndef _PROGTEST_
+#ifndef __PROGTEST__
 CPulitzer::~CPulitzer() {
     delete[] this->politicians;
     delete[] this->parties;
@@ -398,7 +398,7 @@ bool CPulitzer::coalition_leader(uint32_t id_party, uint32_t& id_leader) const {
     return true;
 }
 
-#ifndef _PROGTEST_
+#ifndef __PROGTEST__
 void  CPulitzer::print() {
     cout << std::setw(10);
     cout << std::setw(10) << "Name"; 
