@@ -1,10 +1,13 @@
 // CPulitzer.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-
+#ifndef _PROGTEST_
 #include <iostream>
 #include <iomanip>
 #include <cassert>
 #include <limits>
+#endif
+#include <cstdint>
+#include <string>
 
 using namespace std;
 
@@ -22,6 +25,7 @@ struct party
     uint32_t coalition;  // 0 if party is not in coalition
 };
 
+#define MAXUINT32 0xffffffff
 class CPulitzer {
 
 private:
@@ -35,14 +39,14 @@ private:
     }
     
     bool party_exists(uint32_t id_party) const {
-        return parties[id_party].coalition != numeric_limits<uint32_t>::max();
+        return parties[id_party].coalition != MAXUINT32;
     }
 
     void cancel_party(uint32_t id_party) {
         if (!party_exists(id_party)) {
             return;
         }
-        parties[id_party].coalition = numeric_limits<uint32_t>::max();
+        parties[id_party].coalition = MAXUINT32;
     }
 
     // Input args:
@@ -51,18 +55,20 @@ private:
     //      false if politician is not registered
     //      true otherwise 
     bool politician_exists(uint32_t id_politician) const {
-        return (this->politicians[id_politician].generation != numeric_limits<uint32_t>::max());
+        return (this->politicians[id_politician].generation != MAXUINT32);
     }
 
 public:
 
-    CPulitzer(std::size_t N, std::size_t P);
+    CPulitzer(size_t N, size_t P);
 
+#ifndef _PROGTEST_
     ~CPulitzer();
+#endif // !_PROGTEST_
 
-    bool register_politician(uint32_t id_party, uint32_t id_politician, const std::string& name, uint32_t popularity, uint8_t gender);
+    bool register_politician(uint32_t id_party, uint32_t id_politician, const string& name, uint32_t popularity, uint8_t gender);
 
-    bool politician_name(uint32_t id_politician, std::string& name) const;
+    bool politician_name(uint32_t id_politician, string& name) const;
 
     bool politician_gender(uint32_t id_politician, uint8_t& gender) const;
 
@@ -99,7 +105,7 @@ CPulitzer::CPulitzer(size_t N, size_t P)
     politicians = new struct politician[P];
     // mark all lines in array as free
     for (size_t i = 0; i < P; i++) {
-        politicians[i].generation = numeric_limits<uint32_t>::max();
+        politicians[i].generation = MAXUINT32;
         politicians[i].gender = 0;
         politicians[i].id_party = 0;
         politicians[i].popularity = 0;
@@ -109,14 +115,17 @@ CPulitzer::CPulitzer(size_t N, size_t P)
     parties = new struct party[N];
     // mark all lines in array as free
     for (size_t i = 0; i < N; i++) {
-        parties[i].coalition = numeric_limits<uint32_t>::max();
+        parties[i].coalition = MAXUINT32;
     }
 }
 
+#ifndef _PROGTEST_
 CPulitzer::~CPulitzer() {
     delete[] this->politicians;
     delete[] this->parties;
 }
+#endif // !_PROGTEST_
+
 
 // This increases everytime popularity changes and coalition is created
 uint32_t generation = 0;
@@ -125,7 +134,7 @@ uint32_t generation = 0;
 //      false if politician_id exists
 //      true if otherwise
 bool CPulitzer::register_politician(uint32_t id_party, uint32_t id_politician, 
-                                    const std::string& name, uint32_t popularity, uint8_t gender) {
+                                    const string& name, uint32_t popularity, uint8_t gender) {
     // Check if politician with given id exists
     if (politician_exists(id_politician)) {
         return false;
@@ -146,7 +155,7 @@ bool CPulitzer::register_politician(uint32_t id_party, uint32_t id_politician,
 // Return value:
 //      false if there is no registered politician with given id
 //      true otherwise  
-bool CPulitzer::politician_name(uint32_t id_politician, std::string& name) const {
+bool CPulitzer::politician_name(uint32_t id_politician, string& name) const {
     if (politician_exists(id_politician)) {
         name = politicians[id_politician].name;
         return true;
@@ -183,7 +192,7 @@ bool CPulitzer::deregister_politician(uint32_t id_politician) {
     if (!politician_exists(id_politician)) {
         return false;
     }
-    this->politicians[id_politician].generation = numeric_limits<uint32_t>::max();
+    this->politicians[id_politician].generation = MAXUINT32;
 
     return true;
 }
@@ -202,7 +211,7 @@ bool CPulitzer::party_leader(uint32_t id_party, uint32_t& id_leader) const {
     uint32_t cur_generation = 0;
     id_leader = P;
     for (size_t i = 0; i < P; i++) {
-        if (politicians[i].generation == numeric_limits<uint32_t>::max() ||
+        if (politicians[i].generation == MAXUINT32 ||
             politicians[i].id_party != id_party || 
             politicians[i].popularity < cur_max_popularity) {
             continue;
@@ -361,7 +370,7 @@ bool CPulitzer::coalition_leader(uint32_t id_party, uint32_t& id_leader) const {
         party_leader(id_party, id_leader);
         return true;
     }
-    uint32_t id_cur_coalition_leader = numeric_limits<uint32_t>::max();
+    uint32_t id_cur_coalition_leader = MAXUINT32;
     uint32_t cur_popularity = 0;
     uint32_t cur_generation = 0;
     for (size_t i = 0; i < N; i++) {
@@ -389,7 +398,7 @@ bool CPulitzer::coalition_leader(uint32_t id_party, uint32_t& id_leader) const {
     return true;
 }
 
-#if 0
+#ifndef _PROGTEST_
 void  CPulitzer::print() {
     cout << std::setw(10);
     cout << std::setw(10) << "Name"; 
@@ -398,7 +407,7 @@ void  CPulitzer::print() {
     cout << std::setw(10) << "popularity";
     cout << std::setw(10) << "gender\n";
     for (size_t i = 0; i < this->P; i++) {
-        if (this->politicians[i].generation == numeric_limits<uint32_t>::max()) {
+        if (this->politicians[i].generation == MAXUINT32) {
             cout << "free\n";
             continue;
         }
@@ -410,7 +419,6 @@ void  CPulitzer::print() {
     }
 }
 
-#endif
 
 
 int example1()
@@ -485,14 +493,4 @@ int main() {
 
     return 0;
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+#endif
