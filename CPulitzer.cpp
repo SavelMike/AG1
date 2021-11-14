@@ -3,11 +3,11 @@
 #ifndef __PROGTEST__
 #include <iostream>
 #include <iomanip>
-#include <cassert>
 #include <limits>
 #endif
 #include <cstdint>
 #include <string>
+#include <cassert>
 
 using namespace std;
 
@@ -271,7 +271,7 @@ CPulitzer::CPulitzer(size_t N, size_t P)
 
 CPulitzer::~CPulitzer() {
 	delete[] this->politicians;
-	for (int i = 0; i < N; i++)
+	for (uint32_t i = 0; i < N; i++)
 		bst_destroy(parties[i].pop_order);
 	delete[] this->parties;
 }
