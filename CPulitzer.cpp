@@ -11,6 +11,13 @@
 
 using namespace std;
 
+
+struct bst_node {
+    uint32_t id_politician;
+    struct bst_node* left;
+    struct bst_node* right;
+};
+
 struct politician 
 {
     uint32_t id_party;
@@ -23,6 +30,7 @@ struct politician
 struct party
 {
     uint32_t coalition;  // 0 if party is not in coalition
+    struct bst_node* pop_order;
 };
 
 #define MAXUINT32 0xffffffff
@@ -58,13 +66,105 @@ private:
         return (this->politicians[id_politician].generation != MAXUINT32);
     }
 
+    // Return value:
+    //      0 if popularities are equal
+    //      -1 if politician1 popularity is smaller
+    //      1 if ppolitician1 populatity is higher
+    int compare_popularities(uint32_t id_politician1, uint32_t id_politician2) {
+        if (politicians[id_politician1].popularity < politicians[id_politician2].popularity) {
+            return -1;
+        }
+        if (politicians[id_politician1].popularity > politicians[id_politician2].popularity) {
+            return 1;
+        }
+        if (politicians[id_politician1].generation < politicians[id_politician2].generation) {
+            return -1;
+        }
+        if (politicians[id_politician1].generation > politicians[id_politician2].generation) {
+            return 1;
+        }
+        return 0;
+    }
+
+    // Return value 
+    //      true if new node is inserted
+    //      false otherwise
+    bool bst_insert(struct bst_node** root, uint32_t id_politician)
+    {
+        if (*root == NULL) {
+            *root = new struct bst_node;
+
+            (*root)->id_politician = id_politician;
+            (*root)->left = NULL;
+            (*root)->right = NULL;
+            return true;
+        }
+
+        int cmp = compare_popularities((*root)->id_politician, id_politician);
+        if (cmp == 0)
+            return false;
+
+        if (cmp == 1) {
+            return bst_insert(&((*root)->left), id_politician);
+        }
+        else {
+            return bst_insert(&((*root)->right), id_politician);
+        }
+    }
+
+    // Return value
+    //      politician with highest popularity
+    uint32_t bst_max(struct bst_node* root) {
+         if (root->right == NULL) {
+             return root->id_politician;
+         }
+         return bst_max(root->right);
+    }
+
+    // 
+    bool bst_delete(struct bst_node** root, int key)
+    {
+        struct bst_node* s;
+
+        if (*root == NULL) {
+            /* empty root */
+            return BST_DELETE_NOTFOUND;
+        }
+        if (key < (*root)->key) {
+            return bst_delete(&((*root)->left), key);
+        }
+        if (key > (*root)->key) {
+            return bst_delete(&((*root)->right), key);
+        }
+        if ((*root)->left == NULL && (*root)->right == NULL) {
+            /* no children */
+            *root = NULL;
+            return BST_DELETE_OK;
+        }
+        if ((*root)->left == NULL) {
+            /* only right child */
+            *root = (*root)->right;
+            return BST_DELETE_OK;
+        }
+        if ((*root)->right == NULL) {
+            /* only left child */
+            *root = (*root)->left;
+            return BST_DELETE_OK;
+        }
+        /* two children */
+        s = bst_min((*root)->right);
+        (*root)->key = s->key;
+        bst_delete(&((*root)->right), s->key);
+        return BST_DELETE_OK;
+    }
+
 public:
 
     CPulitzer(size_t N, size_t P);
 
-#ifndef __PROGTEST__
+//#ifndef __PROGTEST__
     ~CPulitzer();
-#endif // !_PROGTEST_
+//#endif // !_PROGTEST_
 
     bool register_politician(uint32_t id_party, uint32_t id_politician, const string& name, uint32_t popularity, uint8_t gender);
 
@@ -116,15 +216,16 @@ CPulitzer::CPulitzer(size_t N, size_t P)
     // mark all lines in array as free
     for (size_t i = 0; i < N; i++) {
         parties[i].coalition = MAXUINT32;
+        parties[i].pop_order = NULL;
     }
 }
 
-#ifndef __PROGTEST__
+//#ifndef __PROGTEST__
 CPulitzer::~CPulitzer() {
     delete[] this->politicians;
     delete[] this->parties;
 }
-#endif // !_PROGTEST_
+//#endif // !_PROGTEST_
 
 
 // This increases everytime popularity changes and coalition is created
@@ -140,14 +241,15 @@ bool CPulitzer::register_politician(uint32_t id_party, uint32_t id_politician,
         return false;
     }
     
-    this->politicians[id_politician].name = name;
-    this->politicians[id_politician].popularity = popularity;
-    this->politicians[id_politician].generation = ++generation;
-    this->politicians[id_politician].gender = gender;
-    this->politicians[id_politician].id_party = id_party;
+    politicians[id_politician].name = name;
+    politicians[id_politician].popularity = popularity;
+    politicians[id_politician].generation = ++generation;
+    politicians[id_politician].gender = gender;
+    politicians[id_politician].id_party = id_party;
     if (!party_exists(id_party)) {
         register_party(id_party);       
     }
+    bst_insert(&parties[id_party].pop_order, id_politician);
 
     return true;
 }
@@ -207,6 +309,7 @@ bool CPulitzer::party_leader(uint32_t id_party, uint32_t& id_leader) const {
     if (!party_exists(id_party)) {
         return false;
     }
+    return bst_max(parties[id_party].pop_order));
     uint32_t cur_max_popularity = 0;
     uint32_t cur_generation = 0;
     id_leader = P;
