@@ -64,7 +64,7 @@ private:
 	//      false if politician is not registered
 	//      true otherwise 
 	bool politician_exists(uint32_t id_politician) const {
-		return (this->politicians[id_politician].generation != MAXUINT32);
+		return (politicians[id_politician].generation != MAXUINT32);
 	}
 
 	// this is used by bst_insert() and bst_delete() to compare
@@ -146,7 +146,7 @@ private:
 		return bst_min(root->left);
 	}
 
-	// Insert new politician into popularity' order
+	// Delete politician from popularity' order
 	// Input args:
 	//      root - root of binary search  tree
 	//      id_politician - id of politician being inserted
@@ -240,8 +240,9 @@ public:
 	bool coalition_leader(uint32_t id_party, uint32_t& id_leader) const;
 
 	bool scandal_occured(uint32_t id_party);
-
+#ifndef __PROGTEST__
 	void print();
+	#endif // !__PROGTEST__
 };
 
 // Bot implementation constructor
@@ -345,6 +346,10 @@ bool CPulitzer::deregister_politician(uint32_t id_politician) {
 	// remove from popularity index
 	bst_delete(&parties[politicians[id_politician].id_party].pop_order, id_politician);
 	politicians[id_politician].generation = MAXUINT32;
+	if (parties[politicians[id_politician].id_party].pop_order == NULL) {
+		// Cancel party with no politicians
+		parties[politicians[id_politician].id_party].coalition = MAXUINT32;
+	}
 	
 	return true;
 }
@@ -506,6 +511,7 @@ bool CPulitzer::coalition_leader(uint32_t id_party, uint32_t& id_leader) const {
 	if (parties[id_party].coalition == 0) {
 		// Party is not in coalition
 		party_leader(id_party, id_leader);
+		cout << id_leader << "\n";
 		return true;
 	}
 	uint32_t id_cur_coalition_leader = MAXUINT32;
