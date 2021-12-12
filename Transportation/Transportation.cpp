@@ -6,7 +6,7 @@
 using namespace std;
 
 struct heap_cell{
-    int count;
+    long long count;
     int from;
 };
 
@@ -41,7 +41,7 @@ private:
     }
 public:
     // Build heap algorithm (lecture 4, p.38)
-    max_heap(int *counts, int n) {
+    max_heap(long long *counts, int n) {
         size = n;
         mheap = new struct heap_cell[size];
         for (int i = 0; i < size; i++) {
@@ -70,9 +70,10 @@ public:
 //        cout << mheap[0].count << "\n";
 //        cout << "[" << mheap[0].from << "," << mheap[0].from + 1 << "]\n";
         int from = mheap[0].from;
+        struct heap_cell last = mheap[size - 1];
         size--;
         if (size > 0) {
-            mheap[0] = mheap[size - 1];
+            mheap[0] = last;
             bubble_down(1);
         }
 
@@ -83,7 +84,7 @@ public:
 struct pass_record {
     int from;
     int to;
-    int count;
+    long long count;
 };
 
 int main()
@@ -93,7 +94,7 @@ int main()
     int p; // number of passenger records
     
     cin >> c >> s >> p;
-    int *segment = new int[s - 1];
+    long long *segment = new long long[s - 1];
     for (int i = 0; i < s - 1; i++) {
         segment[i] = 0;
     }
@@ -112,7 +113,7 @@ int main()
         froms[i] = mheap.heap_extract_max();
     }
     // Calculate number of passengers which travelled from froms[0]-froms[0] + 1, from[1]-from[1] + 1, etc
-    int npass = 0;
+    long long npass = 0;
     for (int i = 0; i < p; i++) {
         for (int j = 0; j < c; j++) {
             if (record[i].from <= froms[j] && froms[j] < record[i].to) {
