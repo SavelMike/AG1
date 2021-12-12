@@ -61,6 +61,29 @@ public:
         cout << "[" << mheap[0].from << "," << mheap[0].from + 1 << "]\n";
         return mheap[0].count;
     }
+
+    int heap_extract_max() {
+        if (size == 0) {
+            return -1;
+        }
+        
+//        cout << mheap[0].count << "\n";
+//        cout << "[" << mheap[0].from << "," << mheap[0].from + 1 << "]\n";
+        int from = mheap[0].from;
+        size--;
+        if (size > 0) {
+            mheap[0] = mheap[size - 1];
+            bubble_down(1);
+        }
+
+        return from;
+    }
+};
+
+struct pass_record {
+    int from;
+    int to;
+    int count;
 };
 
 int main()
@@ -69,30 +92,47 @@ int main()
     int s; // number of stops
     int p; // number of passenger records
     
-
     cin >> c >> s >> p;
-    cout << "c = " << c << "; s = " << s << "; p = " << p << "\n";
     int *segment = new int[s - 1];
     for (int i = 0; i < s - 1; i++) {
         segment[i] = 0;
     }
+
+    struct pass_record *record = new struct pass_record[p];
     for (int i = 0; i < p; i++) {
-        int from; // station where ride begins
-        int to; // station where ride ends
-        int count; // number of passengers expected
-        cin >> from >> to >> count;
-        for (int j = from; j < to; j++) {
-            segment[j] += count;
+        cin >> record[i].from >> record[i].to >> record[i].count;
+        for (int j = record[i].from; j < record[i].to; j++) {
+            segment[j] += record[i].count;
         }
     }
+    int* froms = new int[c];
 
     max_heap mheap(segment, s - 1);
-    mheap.find_max();
-
-/*    
-    for (int i = 0; i < s - 1; i++) {
-        cout << "from " << i << " to " << i + 1 << ": " << segment[i] << "\n";
+    for (int i = 0; i < c; i++) {
+        froms[i] = mheap.heap_extract_max();
     }
-*/
+    // Calculate number of passengers which travelled from froms[0]-froms[0] + 1, from[1]-from[1] + 1, etc
+    int npass = 0;
+    for (int i = 0; i < p; i++) {
+        for (int j = 0; j < c; j++) {
+            if (record[i].from <= froms[j] && froms[j] < record[i].to) {
+                npass += record[i].count;
+                break;
+            }
+        }
+    }
+    cout << npass << "\n";
+    for (int i = 0; i < c; i++) {
+        cout << "[" << froms[i] << ";" << froms[i] + 1 << "]";
+        if (i != c - 1) {
+            cout << ",";
+        }
+    }
+    cout << "\n";
+
+    delete[] segment;
+    delete[] froms;
+    delete[] record;
+    
     return 0;
 }

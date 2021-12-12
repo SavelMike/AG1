@@ -143,6 +143,7 @@ bool bfs(struct coord* start);
 
 void activate_lever(struct lever* lev);
 
+#if 0
 int main(void)
 {
     // read size of labyrint and numnber of levers
@@ -201,33 +202,49 @@ int main(void)
     int num_search = 1<< path_info.nlevers;
     for (int i = 0; i < num_search; i++) {
         // Modify labyrinth
-        int dist_to_lever = 0;
-        int cur_dist_to_lever = 0;
         bool cur_levers[10];
+        // Find biggest of pos vert distance
+        int max_vert_dist = 0;
+        bool was_negative = false;
         for (int j = 0; j < path_info.nlevers; j++) {
             if (i & (1 << j)) {
-                activate_lever(&levers[j]);
-                cur_dist_to_lever = levers[j].vert_dist * 2;
-                if (dist_to_lever < cur_dist_to_lever) {
-                    dist_to_lever = cur_dist_to_lever;
+                if (levers[j].vert_dist > max_vert_dist) {
+                    max_vert_dist = levers[j].vert_dist;
                 }
+                if (levers[j].vert_dist < 0) {
+                    was_negative = true;
+                }
+                activate_lever(&levers[j]);
                 cur_levers[j] = true;
             }
-            else {
+            else
+            {
                 cur_levers[j] = false;
             }
         }
-        if ((dist_to_lever < path_info.path_len + path_info.lever_len || 
-            path_info.path_len == -1) && (!maze.map[start.x][start.y].is_wall)) {
-            if (bfs(&start)) {
-                // Check if it is shortest path
-                if (path_info.path_len + path_info.lever_len > dist_to_lever + maze.map[goblet.x][goblet.y].distance ||
-                    path_info.path_len == -1) {
-                    save_found_path(dist_to_lever);
-                    for (int k = 0; k < path_info.nlevers; k++) {
-                        path_info.levers[k] = cur_levers[k];
-                    }
-                }
+        max_vert_dist *= 2;
+        if (was_negative) {
+            max_vert_dist += 2;
+        }
+        // Start position is wall
+        if (maze.map[start.x][start.y].is_wall) {
+            continue;
+        }
+        
+        if (path_info.path_len != -1 && max_vert_dist >= path_info.path_len + path_info.lever_len) {
+            // Path to levers is not less than length of already found path
+            continue;
+        }
+       
+        if (bfs(&start)) {
+            // Check if it is shortest path
+            if (path_info.path_len + path_info.lever_len > max_vert_dist + maze.map[goblet.x][goblet.y].distance ||
+                path_info.path_len == -1) {
+                save_found_path(max_vert_dist);
+                // Configuration of levers for output
+                for (int k = 0; k < path_info.nlevers; k++) {
+                     path_info.levers[k] = cur_levers[k];
+                }    
             }
         }
         // Restore labyrinth
@@ -263,6 +280,7 @@ int main(void)
     
     return 0;
 }
+#endif
 
 // Return value: 
 //      true if goblet is found
