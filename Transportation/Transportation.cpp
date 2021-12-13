@@ -5,87 +5,25 @@
 
 using namespace std;
 
-struct heap_cell{
-    long long count;
-    int from;
-};
-
-class max_heap {
-private:
-    struct heap_cell *mheap;
-    int size;
-    bool is_leaf(int i) {
-        if (size / 2 >= i) {
-            return false;
-        }
-        else {
-            return true;
-        }
-    }
-    void bubble_down(int i) {
-        int child_ind;
-        while (!is_leaf(i)) {
-            child_ind = 2 * i;
-            if ((child_ind < size) && mheap[child_ind - 1].count < mheap[child_ind + 1 - 1].count) {
-                // Right child exists and is bigger than left 
-                child_ind++;
-            }
-            if (mheap[i - 1].count >= mheap[child_ind - 1].count) {
-                break;
-            }
-            struct heap_cell tmp = mheap[i - 1];
-            mheap[i - 1] = mheap[child_ind - 1];
-            mheap[child_ind - 1] = tmp;
-            i = child_ind;
-        }
-    }
-public:
-    // Build heap algorithm (lecture 4, p.38)
-    max_heap(long long *counts, int n) {
-        size = n;
-        mheap = new struct heap_cell[size];
-        for (int i = 0; i < size; i++) {
-            mheap[i].count = counts[i];
-            mheap[i].from = i;
-        }
-        for (int i = size / 2; i >= 1; i--) {
-            bubble_down(i);
-        }
-    }
-    ~max_heap() {
-        delete[] mheap;
-    }
-    
-    int find_max() {
-        cout << mheap[0].count << "\n";
-        cout << "[" << mheap[0].from << "," << mheap[0].from + 1 << "]\n";
-        return mheap[0].count;
-    }
-
-    int heap_extract_max() {
-        if (size == 0) {
-            return -1;
-        }
-        
-//        cout << mheap[0].count << "\n";
-//        cout << "[" << mheap[0].from << "," << mheap[0].from + 1 << "]\n";
-        int from = mheap[0].from;
-        struct heap_cell last = mheap[size - 1];
-        size--;
-        if (size > 0) {
-            mheap[0] = last;
-            bubble_down(1);
-        }
-
-        return from;
-    }
-};
-
 struct pass_record {
     int from;
     int to;
     long long count;
 };
+
+void combination(int *arrin, int n, int *arrout, int ind, int k) {
+    if (ind == k) {
+        for (int i = 0; i < ind; i++) {
+            cout << arrout[i] << ",";
+        }
+        cout << "\n";
+        return;
+    }
+    for (int i = 0; i < n; i++) {
+        arrout[ind] = arrin[i];
+        combination(arrin + i + 1, n - i - 1, arrout, ind + 1, k);
+    }
+}
 
 int main()
 {
@@ -94,46 +32,40 @@ int main()
     int p; // number of passenger records
     
     cin >> c >> s >> p;
-    long long *segment = new long long[s - 1];
+    // Elements of this array become true if segments passed passengers. 
+    bool *active_segments = new bool[s - 1];
     for (int i = 0; i < s - 1; i++) {
-        segment[i] = 0;
+        active_segments[i] = false;
     }
 
+    // Read passenger records
     struct pass_record *record = new struct pass_record[p];
     for (int i = 0; i < p; i++) {
         cin >> record[i].from >> record[i].to >> record[i].count;
         for (int j = record[i].from; j < record[i].to; j++) {
-            segment[j] += record[i].count;
+            active_segments[j] = true;
         }
     }
-    int* froms = new int[c];
 
-    max_heap mheap(segment, s - 1);
-    for (int i = 0; i < c; i++) {
-        froms[i] = mheap.heap_extract_max();
-    }
-    // Calculate number of passengers which travelled from froms[0]-froms[0] + 1, from[1]-from[1] + 1, etc
-    long long npass = 0;
-    for (int i = 0; i < p; i++) {
-        for (int j = 0; j < c; j++) {
-            if (record[i].from <= froms[j] && froms[j] < record[i].to) {
-                npass += record[i].count;
-                break;
-            }
+    //Calculate number of active segments
+    int cnt = 0;
+    for (int i = 0; i < s - 1; i++) {
+        if (active_segments[i] == true) {
+            cnt++;
         }
     }
-    cout << npass << "\n";
-    for (int i = 0; i < c; i++) {
-        cout << "[" << froms[i] << ";" << froms[i] + 1 << "]";
-        if (i != c - 1) {
-            cout << ",";
+    if (c > cnt) {
+        c = cnt;
+    }
+    // Array of active segments
+    int* act_segments = new int[cnt];
+    for (int i = 0, j = 0; i < s - 1; i++) {
+        if (active_segments[i] == true) {
+            act_segments[j++] = i;
         }
     }
-    cout << "\n";
+    int* comb = new int[c];
+    combination(act_segments, cnt, comb, 0, c);
 
-    delete[] segment;
-    delete[] froms;
-    delete[] record;
-    
     return 0;
 }
